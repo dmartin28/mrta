@@ -2,6 +2,7 @@
 import numpy as np
 from task import Task
 from robot import Robot
+from IP_assignment import IP_assignment
 
 nu = 10 #number of robots
 mu = 5 # number of tasks
