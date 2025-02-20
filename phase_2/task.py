@@ -25,5 +25,12 @@ class Task:
         except IndexError:
             raise IndexError("Indices out of bounds for the reward matrix.")
 
+    def get_location(self):
+        return (self.x, self.y)
+    
+    def set_location(self, x, y):
+        self.x = x
+        self.y = y
+
     def __str__(self):
         return f"Task with reward matrix:\n{self.reward_matrix}"

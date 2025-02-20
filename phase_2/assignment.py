@@ -4,8 +4,8 @@ from task import Task
 from robot import Robot
 from IP_assignment import IP_assignment
 
-nu = 10 #number of robots
-mu = 5 # number of tasks
+nu = 5 #number of robots
+mu = 3 # number of tasks
 kappa = 2 # number of capabilities
 L = 3 # maximum team size
 
@@ -74,13 +74,18 @@ for i in range(mu):
     task = Task(i, task_types[i], task_x_locations[i], task_y_locations[i])
     task_list.append(task)
 
+# Check the robots created
+print(f"Created {len(robot_list)} robots:")
+for robot in robot_list:
+    print(f"Robot {robot.id}: Position ({robot.x}, {robot.y})")
+    print(f"Capabilities: {robot.capabilities}")
+    print()  # Add an empty line for better readability
+
+# Check the tasks created
+print(f"\nCreated {len(task_list)} tasks:")
+for task in task_list:
+    print(f"Task {task.id}: Position ({task.x}, {task.y})")
+    print(f"Reward Matrix:\n{task.reward_matrix}")
+    print()  # Add an empty line for better readability
+
 Assignment = IP_assignment(robot_list, task_list, L)
-
-
-# print(f"Created {len(robot_list)} robots:")
-# for robot in robot_list:
-#     print(f"Robot {robot.id}: Type {robot.capabilities}, Position ({robot.x}, {robot.y})")
-
-# print(f"\nCreated {len(task_list)} tasks:")
-# for task in task_list:
-#     print(f"Task {task.id}: Reward: {task.reward_matrix} Position ({task.x}, {task.y})")
