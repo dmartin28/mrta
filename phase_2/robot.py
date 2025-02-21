@@ -7,6 +7,9 @@ class Robot:
         self.x = x
         self.y = y
         self.id = id
+    
+    def get_id(self):
+        return self.id
 
     def get_location(self):
         return (self.x, self.y)
