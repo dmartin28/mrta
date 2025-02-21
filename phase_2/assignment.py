@@ -4,8 +4,8 @@ from task import Task
 from robot import Robot
 from IP_assignment import IP_assignment
 
-nu = 5 #number of robots
-mu = 3 # number of tasks
+nu = 10 #number of robots (max 10)
+mu = 8 # number of tasks (max 8)
 kappa = 2 # number of capabilities
 L = 3 # maximum team size
 
@@ -42,6 +42,20 @@ task_type_4[2,0] = 200
 #Type 5 can be done only collaboratively by two of cap 2 
 task_type_5 = np.zeros(reward_dim)
 task_type_5[0,2] = 200
+
+#Type 6 can be done only collaboratively by cap 1 and 2 
+task_type_6 = np.zeros(reward_dim)
+task_type_6[1,1] = 200
+task_type_6[1,2] = 220
+task_type_6[2,1] = 220
+
+#Type 7 can be done only collaboratively by two of cap 1 
+task_type_7 = np.zeros(reward_dim)
+task_type_7[1,0] = 50
+
+#Type 8 can be done only collaboratively by two of cap 2 
+task_type_8 = np.zeros(reward_dim)
+task_type_8[0,1] = 50
 #####################################################
 
 #Define the two robot types:
@@ -49,11 +63,11 @@ task_type_5[0,2] = 200
 robot_type_1 = [1,0]
 robot_type_2 = [0,1]
 
-#Generate random robot and task locations
-robot_x_locations = np.random.uniform(min_x, max_x, nu)
-robot_y_locations = np.random.uniform(min_y, max_y, nu)
-task_x_locations = np.random.uniform(min_x, max_x, mu)
-task_y_locations = np.random.uniform(min_y, max_y, mu)
+# Generate random robot and task locations
+robot_x_locations = np.round(np.random.uniform(min_x, max_x, nu), decimals=1)
+robot_y_locations = np.round(np.random.uniform(min_y, max_y, nu), decimals=1)
+task_x_locations = np.round(np.random.uniform(min_x, max_x, mu), decimals=1)
+task_y_locations = np.round(np.random.uniform(min_y, max_y, mu), decimals=1)
 
 robot_list = []
 task_list = []
@@ -69,7 +83,7 @@ for i in range(nu):
     robot_list.append(robot)
 
 # Create tasks
-task_types = [task_type_1, task_type_2, task_type_3, task_type_4, task_type_5]
+task_types = [task_type_1, task_type_2, task_type_3, task_type_4, task_type_5, task_type_6, task_type_7, task_type_8] 
 for i in range(mu):
     task = Task(i, task_types[i], task_x_locations[i], task_y_locations[i])
     task_list.append(task)

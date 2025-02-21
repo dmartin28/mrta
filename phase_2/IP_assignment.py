@@ -18,6 +18,7 @@ def IP_assignment(robot_list, task_list, L):
     print(f"All partitions of {n} into {m} parts with each part <= {L}:")
     for partition in partitions:
         print(partition)
+    print(f"Total number of partitions: {len(partitions)}")
 
 
     # Calculate mean and average reward for each each for each possible team size:
@@ -44,8 +45,9 @@ def IP_assignment(robot_list, task_list, L):
                 for robot_idx in combo:
                     cost += math.dist(robot_list[robot_idx].get_location(), task_list[task_idx].get_location())
                 
-                # net_reward = capability_value - cost
-                net_reward = capability_value
+                # Here is where you can change the reward function
+                net_reward = capability_value - cost
+                # net_reward = capability_value
 
                 
                 if net_reward > max_rewards[team_size, task_idx]:
@@ -77,13 +79,13 @@ def IP_assignment(robot_list, task_list, L):
     for partition_idx, partition in enumerate(partitions):
         print(f"{partition} | {lower_bounds[partition_idx]:.2f} | {upper_bounds[partition_idx]:.2f}")
     #######################################################
+    print(f"Total number of partitions: {len(partitions)}")
 
     # Find global upper and lower bound
     LB = max(lower_bounds)
     UB = max(upper_bounds)
 
     while len(partitions) > 0:
-        LB = max(LB,global_reward)
         
         best_partition_idx = np.argmax(upper_bounds)
         
@@ -95,16 +97,22 @@ def IP_assignment(robot_list, task_list, L):
         
         # Search partition with highest UB
         partition_assignment, partition_reward = utils.partition_search(robot_list, task_list, partitions[best_partition_idx])
+        
+        # Remove best partition from list
+        partitions.pop(best_partition_idx)
+        upper_bounds = np.delete(upper_bounds, best_partition_idx)
+        
         if partition_reward > global_reward:
             global_reward = partition_reward
             best_assignment = partition_assignment
+            LB = max(LB,global_reward)
             
         print("\nbest_assignment: ", best_assignment)
         print("global_reward: ", global_reward)
         
         # Trim all partitions whose UB is less than the LB
         for partition_idx in range(len(partitions) - 1, -1, -1):
-            if upper_bounds[partition_idx] < LB:
+            if upper_bounds[partition_idx] <= LB:
                 del partitions[partition_idx]
                 upper_bounds = np.delete(upper_bounds, partition_idx)
                 lower_bounds = np.delete(lower_bounds, partition_idx)
@@ -116,14 +124,11 @@ def IP_assignment(robot_list, task_list, L):
         for partition_idx, partition in enumerate(partitions):
             print(f"{partition} | {lower_bounds[partition_idx]:.2f} | {upper_bounds[partition_idx]:.2f}")
         ######################################################################   
-    
-        partitions.pop(best_partition_idx)
-        upper_bounds = np.delete(upper_bounds, best_partition_idx)
         
         print("num partitions left: ", len(partitions))
         print("num_upper_bounds left: ", len(upper_bounds))
         
     print("Final best_assignment: ", best_assignment)
-    print("Final global_reward: ", global_reward)
+    print("Final global_reward: ", round(global_reward))
     
     return best_assignment, global_reward
