@@ -1,11 +1,12 @@
 # Phase 2 assignment algorithm
 import numpy as np
 from task import Task
-from robot import Robot
 from IP_assignment import IP_assignment
+from IP_assignment_with_dummy_task import IP_assignment_with_dummy_task
+from robot import Robot
 
-nu = 10 #number of robots (max 10)
-mu = 8 # number of tasks (max 8)
+nu = 8 #number of robots (max 10)
+mu = 4 # number of tasks (max 8)
 kappa = 2 # number of capabilities
 L = 3 # maximum team size
 
@@ -18,6 +19,9 @@ min_y = 0
 ####### Define some specific task types: ############
 reward_dim = tuple(L+1 for _ in range(kappa))
 
+# #Type 0 is dummy task, represents robots not assigned to any task
+# task_type_0 = np.zeros(reward_dim)
+
 #Type 1 can be done by robots with capability 1 
 task_type_1 = np.zeros(reward_dim)
 task_type_1[1,0] = 100
@@ -26,14 +30,14 @@ task_type_1[2,0] = 200
 #Type 2 can be done by robots with capability 2 
 task_type_2 = np.zeros(reward_dim)
 task_type_2[0,1] = 100
-task_type_2[0,2] = 200
-task_type_2[0,3] = 250
+task_type_2[0,2] = 150
+task_type_2[0,3] = 200
 
 #Type 3 can be done only collaboratively by cap 1 and 2 
 task_type_3 = np.zeros(reward_dim)
 task_type_3[1,1] = 200
-task_type_3[1,2] = 220
-task_type_3[2,1] = 220
+task_type_3[1,2] = 300
+task_type_3[2,1] = 300
 
 #Type 4 can be done only collaboratively by two of cap 1 
 task_type_4 = np.zeros(reward_dim)
@@ -51,11 +55,11 @@ task_type_6[2,1] = 220
 
 #Type 7 can be done only collaboratively by two of cap 1 
 task_type_7 = np.zeros(reward_dim)
-task_type_7[1,0] = 50
+task_type_7[1,0] = 100
 
 #Type 8 can be done only collaboratively by two of cap 2 
 task_type_8 = np.zeros(reward_dim)
-task_type_8[0,1] = 50
+task_type_8[0,1] = 100
 #####################################################
 
 #Define the two robot types:
@@ -102,4 +106,9 @@ for task in task_list:
     print(f"Reward Matrix:\n{task.reward_matrix}")
     print()  # Add an empty line for better readability
 
-Assignment = IP_assignment(robot_list, task_list, L)
+Assignment, Reward = IP_assignment(robot_list, task_list, L)
+print("Assignment: ", Assignment, "Reward: ", Reward)
+
+#This includes a dummy task that represents the robots not assigned to any task
+# Assignment_with_dummy, Reward_dummy= IP_assignment_with_dummy_task(robot_list, task_list, L)
+# print("Assignment_with_dummy: ", Assignment_with_dummy , "Reward_dummy: ", Reward_dummy)

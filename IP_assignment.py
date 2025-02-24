@@ -15,15 +15,15 @@ def IP_assignment(robot_list, task_list, L):
 
     partitions = utils.generate_partitions(n, m, L)
 
-    print(f"All partitions of {n} into {m} parts with each part <= {L}:")
-    for partition in partitions:
-        print(partition)
-    print(f"Total number of partitions: {len(partitions)}")
+    # print(f"All partitions of {n} into {m} parts with each part <= {L}:")
+    # for partition in partitions:
+    #     print(partition)
+    # print(f"Total number of partitions: {len(partitions)}")
 
 
     # Calculate mean and average reward for each each for each possible team size:
     max_team_size = L
-    max_rewards = np.zeros((max_team_size+1, m))
+    max_rewards = np.full((max_team_size+1, m), float('-inf'))
     avg_rewards = np.zeros((max_team_size+1, m))
 
     # Calculate max and average reward for each team size for each task
