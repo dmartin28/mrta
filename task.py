@@ -51,12 +51,12 @@ class Task:
     def __str__(self):
         return f"Task with reward matrix:\n{self.reward_matrix}"
     
-    def get_shapley_vector(self,coalition): # Note: coalition is an np array of capability amounts
+    def get_shapley_vectors(self,coalition): # Note: coalition is an np array of capability amounts
         """
         Calculate the Shapley value for a task
         """
 
-        print("Grand Coalition: ", coalition)
+        #print("Grand Coalition: ", coalition)
     
         n = np.sum(coalition) # number of robots
         kappa = len(coalition) # number of capabilities
@@ -77,18 +77,18 @@ class Task:
             # Convert tuples to numpy arrays
             subsets = [np.array(subset) for subset in tuples]
 
-            print("Capability: ", capability)
-            print("subsets of teamate capabilities: ", subsets)
+            #print("Capability: ", capability)
+            #print("subsets of teamate capabilities: ", subsets)
 
             for subset in subsets:
-                print("subset: ", subset)
-                print("subset+player: ", subset+player)
+                #print("subset: ", subset)
+                #print("subset+player: ", subset+player)
 
                 # Calculate number of times each subset occurs
                 subset_multiplicity = 1
                 for k in range(kappa):
                     subset_multiplicity *= math.comb(teamate_capabilities[k], subset[k])
-                print("subset_multiplicity: ", subset_multiplicity)
+                #print("subset_multiplicity: ", subset_multiplicity)
 
                 MC = self.get_reward(*((subset+player).astype(int))) - self.get_reward(*subset)
                 shapley_values[capability] += MC/(math.comb((n-1), np.sum(subset))) * subset_multiplicity
@@ -97,11 +97,11 @@ class Task:
         # Create shapley vector as ragged array
         shapley_vectors = [np.full(coalition[k], shapley_values[k]) for k in range(kappa)]
     
-        print("Shapley vectors: ", shapley_vectors)
+        #print("Shapley vectors: ", shapley_vectors)
 
         return shapley_vectors
     
-    def get_grand_shapley_vector(self):
-        print("Grand Coalition: ", self.grand_coalition)
+    def get_grand_shapley_vectors(self):
+        #print("Grand Coalition: ", self.grand_coalition)
         coalition = self.grand_coalition
-        return self.get_shapley_vector(coalition)
+        return self.get_shapley_vectors(coalition)

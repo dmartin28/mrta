@@ -6,7 +6,7 @@ from robot import Robot
 # My Code:
 import phase2_utils as utils
 
-def IP_assignment(robot_list, task_list, L):
+def IP_assignment(robot_list, task_list, L, kappa):
     
     n = len(robot_list)
     m = len(task_list)
@@ -35,7 +35,7 @@ def IP_assignment(robot_list, task_list, L):
 
             for combo in combos:                        
                 #Calculate capability value
-                team_capabilities = np.zeros(len(robot_list[0].get_capabilities()), dtype=np.int32)
+                team_capabilities = np.zeros(kappa, dtype=np.int32)
                 for robot_idx in combo:
                     team_capabilities += robot_list[robot_idx].get_capabilities()
                 capability_value =  task_list[task_idx].get_reward(*team_capabilities)
@@ -56,13 +56,21 @@ def IP_assignment(robot_list, task_list, L):
                 avg_rewards[team_size, task_idx] += net_reward/num_combos
 
     # Print the average rewards matrix
-    print("Average Rewards Matrix: Rows = Team Size, Columns = Task")
-    print(avg_rewards)
-    print()
+    #print("Average Rewards Matrix: Rows = Team Size, Columns = Task")
+    #print(avg_rewards)
+    #print()
 
     # Print the maximum rewards matrix
-    print("Maximum Rewards Matrix: Rows = Team Size, Columns = Task")
-    print(max_rewards)
+    #print("Maximum Rewards Matrix: Rows = Team Size, Columns = Task")
+    #print(max_rewards)
+
+    """Need to more elegantly account for clusters without tasks/robots"""
+    # Add error catch for case where there are no tasks in a cluster:
+    if len(task_list) == 0:
+        print("No tasks assigned to partition")
+        best_assignment = []
+        global_reward = 0
+        return best_assignment, global_reward
 
     # Calculate upper and lower bounds for each partition
     upper_bounds = np.zeros(len(partitions))
@@ -79,7 +87,7 @@ def IP_assignment(robot_list, task_list, L):
     for partition_idx, partition in enumerate(partitions):
         print(f"{partition} | {lower_bounds[partition_idx]:.2f} | {upper_bounds[partition_idx]:.2f}")
     #######################################################
-    print(f"Total number of partitions: {len(partitions)}")
+    #print(f"Total number of partitions: {len(partitions)}")
 
     # Find global upper and lower bound
     LB = max(lower_bounds)

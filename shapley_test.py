@@ -66,9 +66,9 @@ task_type_8[0,1] = 100
 
 task = Task(0, task_type_6, 0, 0)
 
-utils_shapley_values = utils.shapley_vector(task)
+#utils_shapley_values = utils.shapley_vector(task)
 
 task_shapley_values = task.get_grand_shapley_vector()
 
-print("Utils Shapley Values: ", utils_shapley_values)
+#print("Utils Shapley Values: ", utils_shapley_values)
 print("Task Shapley Values: ", task_shapley_values)
