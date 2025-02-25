@@ -1,4 +1,3 @@
-# Phase 2 assignment algorithm
 import numpy as np
 from task import Task
 from robot import Robot
