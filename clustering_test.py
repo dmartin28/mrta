@@ -103,6 +103,9 @@ for task in task_list:
     print(f"Reward Matrix:\n{task.reward_matrix}")
     print()  # Add an empty line for better readability
 
+
+
+
 # Generate a clustering of tasks and robots
 
 # Initialize clusters
