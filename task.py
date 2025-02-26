@@ -13,8 +13,7 @@ class Task:
         flat_index = np.argmax(self.reward_matrix)
         grand_coalition_tuple = np.unravel_index(flat_index, self.reward_matrix.shape)
         self.grand_coalition = np.array(grand_coalition_tuple)
-
-        # Calculate the shapley vector of the grand coalition
+        self.grand_shapley_vectors = self.get_shapley_vectors(self.grand_coalition)
 
 
     def get_id(self):
@@ -102,6 +101,4 @@ class Task:
         return shapley_vectors
     
     def get_grand_shapley_vectors(self):
-        #print("Grand Coalition: ", self.grand_coalition)
-        coalition = self.grand_coalition
-        return self.get_shapley_vectors(coalition)
+        return self.grand_shapley_vectors

@@ -4,68 +4,6 @@ import math
 
 from task import Task
 from robot import Robot
-
-# def shapley_vector(task):
-#     """
-#     Calculate the Shapley value for a task
-#     """
-
-#     """
-#     # Note this should likely be moved inside of the Task class
-#     """
-
-#     # Find the grand coalition capabilities:
-#     # reward_matrix = task.get_reward_matrix()
-#     # flat_index = np.argmax(reward_matrix)
-#     # grand_coalition_tuple = np.unravel_index(flat_index, reward_matrix.shape)
-#     # grand_coalition = np.array(grand_coalition_tuple)
-
-#     grand_coalition = task.get_grand_coalition()
-
-#     print("Grand Coalition: ", grand_coalition)
-    
-#     n = np.sum(grand_coalition) # number of robots
-#     kappa = len(grand_coalition) # number of capabilities
-#     shapley_values = np.zeros(kappa)
-
-#     for capability in range(kappa):
-#         # create subsets that do not include the capability
-#         player = np.zeros(kappa)
-#         player[capability] = 1
-#         teamate_capabilities = (grand_coalition.copy() - player).astype(int)
-        
-#         # Create ranges for each element
-#         ranges = [range(i+1) for i in teamate_capabilities]
-
-#         # Use itertools.product to generate all combinations
-#         tuples = list(product(*ranges))
-
-#         # Convert tuples to numpy arrays
-#         subsets = [np.array(subset) for subset in tuples]
-
-#         print("Capability: ", capability)
-#         print("subsets of teamate capabilities: ", subsets)
-
-#         for subset in subsets:
-#             print("subset: ", subset)
-#             print("subset+player: ", subset+player)
-
-#             # Calculate number of times each subset occurs
-#             subset_multiplicity = 1
-#             for k in range(kappa):
-#                 subset_multiplicity *= math.comb(teamate_capabilities[k], subset[k])
-#             print("subset_multiplicity: ", subset_multiplicity)
-
-#             MC = task.get_reward(*((subset+player).astype(int))) - task.get_reward(*subset)
-#             shapley_values[capability] += MC/(math.comb((n-1), np.sum(subset))) * subset_multiplicity
-#         shapley_values[capability] = shapley_values[capability] / n
-
-#     # Create shapley vector as ragged array
-#     shapley_vectors = [np.full(grand_coalition[k], shapley_values[k]) for k in range(kappa)]
-    
-#     print("Shapley vectors: ", shapley_vectors)
-
-#     return shapley_vectors
     
 def coalition_value_1(robots, tasks, kappa):
     # Coalition value function 1: 
