@@ -2,11 +2,11 @@
 import numpy as np
 from task import Task
 from IP_assignment import IP_assignment
-from IP_assignment_with_dummy_task import IP_assignment_with_dummy_task
+from IP_assignment_robust import IP_assignment_robust
 from robot import Robot
 
-nu = 8 #number of robots (max 10)
-mu = 4 # number of tasks (max 8)
+nu = 7 #number of robots 
+mu = 2 # number of tasks 
 kappa = 2 # number of capabilities
 L = 3 # maximum team size
 
@@ -22,16 +22,25 @@ reward_dim = tuple(L+1 for _ in range(kappa))
 # #Type 0 is dummy task, represents robots not assigned to any task
 # task_type_0 = np.zeros(reward_dim)
 
-#Type 1 can be done by robots with capability 1 
-task_type_1 = np.zeros(reward_dim)
-task_type_1[1,0] = 100
-task_type_1[2,0] = 200
+# #Type 1 can be done by robots with capability 1 
+# task_type_1 = np.zeros(reward_dim)
+# task_type_1[1,0] = 100
+# task_type_1[2,0] = 200
 
-#Type 2 can be done by robots with capability 2 
+#Type 1 can be done only collaboratively by cap 1 and 2 
+task_type_1 = np.zeros(reward_dim)
+task_type_1[1,1] = 200
+task_type_1[1,2] = 301
+task_type_1[2,1] = 301
+
+# #Type 2 can be done by robots with capability 2 
+# task_type_2 = np.zeros(reward_dim)
+# task_type_2[0,1] = 100
+# task_type_2[0,2] = 150
+# task_type_2[0,3] = 200
+
 task_type_2 = np.zeros(reward_dim)
-task_type_2[0,1] = 100
-task_type_2[0,2] = 150
-task_type_2[0,3] = 200
+task_type_2[1,0] = 100
 
 #Type 3 can be done only collaboratively by cap 1 and 2 
 task_type_3 = np.zeros(reward_dim)
@@ -53,11 +62,11 @@ task_type_6[1,1] = 200
 task_type_6[1,2] = 220
 task_type_6[2,1] = 220
 
-#Type 7 can be done only collaboratively by two of cap 1 
+#Type 7 
 task_type_7 = np.zeros(reward_dim)
 task_type_7[1,0] = 100
 
-#Type 8 can be done only collaboratively by two of cap 2 
+#Type 8 
 task_type_8 = np.zeros(reward_dim)
 task_type_8[0,1] = 100
 #####################################################
@@ -78,7 +87,7 @@ task_list = []
 
 # Create robots
 for i in range(nu):
-    if i < nu // 2:
+    if i%2 == 0:
         robot_type = robot_type_1
     else:
         robot_type = robot_type_2
@@ -106,7 +115,7 @@ for task in task_list:
     print(f"Reward Matrix:\n{task.reward_matrix}")
     print()  # Add an empty line for better readability
 
-Assignment, Reward = IP_assignment(robot_list, task_list, L)
+Assignment, Reward = IP_assignment_robust(robot_list, task_list, L, kappa)
 print("Assignment: ", Assignment, "Reward: ", Reward)
 
 #This includes a dummy task that represents the robots not assigned to any task

@@ -5,16 +5,16 @@ from IP_assignment import IP_assignment
 import phase1_utils as utils
 
 nu = 11 #number of robots
-mu = 4 # number of tasks
+mu = 5 # number of tasks
 kappa = 2 # number of capabilities
 L = 3 # maximum team size for a single task
-L_t = 4 # Max number of tasks in a cluster
-L_r = 8 # Max number of robots in a cluster
+L_t = 5 # Max number of tasks in a cluster
+L_r = 11 # Max number of robots in a cluster
 
 #Define the environment size
-max_x = 10
+max_x = 50
 min_x = 0
-max_y = 10
+max_y = 50
 min_y = 0
 
 ####### Define some specific task types: ############
@@ -181,6 +181,7 @@ for i in range(len(clusters)):
     rewards.append(reward)
 
 print("Final clusters: ")
+print()
 for i in range(len(clusters)):
     cluster = clusters[i]
     print("Cluster: ", i)

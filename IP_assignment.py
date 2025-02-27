@@ -6,7 +6,7 @@ from robot import Robot
 # My Code:
 import phase2_utils as utils
 
-def IP_assignment(robot_list, task_list, L, kappa):
+def IP_assignment(robot_list, task_list, L, kappa, printout=False):
     
     n = len(robot_list)
     m = len(task_list)
@@ -67,7 +67,8 @@ def IP_assignment(robot_list, task_list, L, kappa):
     """Need to more elegantly account for clusters without tasks/robots"""
     # Add error catch for case where there are no tasks in a cluster:
     if len(task_list) == 0:
-        print("No tasks assigned to partition")
+        if printout:
+            print("No tasks assigned to partition")
         best_assignment = []
         global_reward = 0
         return best_assignment, global_reward
@@ -80,12 +81,13 @@ def IP_assignment(robot_list, task_list, L, kappa):
             lower_bounds[partition_idx] += avg_rewards[partitions[partition_idx][task_idx], task_idx]
             upper_bounds[partition_idx] += max_rewards[partitions[partition_idx][task_idx], task_idx]
 
-    # Write partitions with their upper and lower bounds
-    print("\nPartitions with Upper and Lower Bounds:")
-    print("Partition | Lower Bound | Upper Bound")
-    print("-" * 40)
-    for partition_idx, partition in enumerate(partitions):
-        print(f"{partition} | {lower_bounds[partition_idx]:.2f} | {upper_bounds[partition_idx]:.2f}")
+    if printout:
+        # Write partitions with their upper and lower bounds
+        print("\nPartitions with Upper and Lower Bounds:")
+        print("Partition | Lower Bound | Upper Bound")
+        print("-" * 40)
+        for partition_idx, partition in enumerate(partitions):
+            print(f"{partition} | {lower_bounds[partition_idx]:.2f} | {upper_bounds[partition_idx]:.2f}")
     #######################################################
     #print(f"Total number of partitions: {len(partitions)}")
 
@@ -97,11 +99,12 @@ def IP_assignment(robot_list, task_list, L, kappa):
         
         best_partition_idx = np.argmax(upper_bounds)
         
-        # Print best partition
-        print("\nBest Partition:")
-        print("Partition | Lower Bound | Upper Bound")
-        print("-" * 40)
-        print(f"{partitions[best_partition_idx]} | {lower_bounds[best_partition_idx]:.2f} | {upper_bounds[best_partition_idx]:.2f}")
+        if printout:
+            # Print best partition
+            print("\nBest Partition:")
+            print("Partition | Lower Bound | Upper Bound")
+            print("-" * 40)
+            print(f"{partitions[best_partition_idx]} | {lower_bounds[best_partition_idx]:.2f} | {upper_bounds[best_partition_idx]:.2f}")
         
         # Search partition with highest UB
         partition_assignment, partition_reward = utils.partition_search(robot_list, task_list, partitions[best_partition_idx])
@@ -115,8 +118,9 @@ def IP_assignment(robot_list, task_list, L, kappa):
             best_assignment = partition_assignment
             LB = max(LB,global_reward)
             
-        print("\nbest_assignment: ", best_assignment)
-        print("global_reward: ", global_reward)
+        if printout:
+            print("\nbest_assignment: ", best_assignment)
+            print("global_reward: ", global_reward)
         
         # Trim all partitions whose UB is less than the LB
         for partition_idx in range(len(partitions) - 1, -1, -1):
@@ -125,18 +129,20 @@ def IP_assignment(robot_list, task_list, L, kappa):
                 upper_bounds = np.delete(upper_bounds, partition_idx)
                 lower_bounds = np.delete(lower_bounds, partition_idx)
                 
-        ##### Write trimmed partitions with their upper and lower bounds ####
-        print("\nTrimmed Partitions with Upper and Lower Bounds:")
-        print("Partition | Lower Bound | Upper Bound")
-        print("-" * 40)
-        for partition_idx, partition in enumerate(partitions):
-            print(f"{partition} | {lower_bounds[partition_idx]:.2f} | {upper_bounds[partition_idx]:.2f}")
-        ######################################################################   
+        if printout:
+            ##### Write trimmed partitions with their upper and lower bounds ####
+            print("\nTrimmed Partitions with Upper and Lower Bounds:")
+            print("Partition | Lower Bound | Upper Bound")
+            print("-" * 40)
+            for partition_idx, partition in enumerate(partitions):
+                print(f"{partition} | {lower_bounds[partition_idx]:.2f} | {upper_bounds[partition_idx]:.2f}")
+            ######################################################################   
         
-        print("num partitions left: ", len(partitions))
-        print("num_upper_bounds left: ", len(upper_bounds))
+            print("num partitions left: ", len(partitions))
+            print("num_upper_bounds left: ", len(upper_bounds))
         
-    print("Final best_assignment: ", best_assignment)
-    print("Final global_reward: ", round(global_reward))
+    if printout:
+        print("Final best_assignment: ", best_assignment)
+        print("Final global_reward: ", round(global_reward))
     
     return best_assignment, global_reward
