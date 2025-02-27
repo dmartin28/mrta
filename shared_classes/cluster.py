@@ -1,5 +1,5 @@
 
-
+"""Note: This class is not currently being used"""
 class Robot:
     def __init__(self, id, robots, tasks):
         

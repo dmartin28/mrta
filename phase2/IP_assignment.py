@@ -1,19 +1,19 @@
 import numpy as np
 import math
 from itertools import combinations
-from robot import Robot
+from shared_classes.robot import Robot
 
 # My Code:
-import phase2_utils as utils
+import phase2.phase2_utils as utils
 
-def IP_assignment_robust(robot_list, task_list, L,kappa):
+def IP_assignment(robot_list, task_list, L,kappa,printout=False):
     
     n = len(robot_list)
     m = len(task_list)
 
     # Check if there are no tasks or robots
     if n == 0:
-        best_assignment = [ [] for _ in range(m)]
+        best_assignment = [ [] for _ in range(m+1)]
         reward = 0
         return best_assignment, reward
     if m == 0:
@@ -28,14 +28,14 @@ def IP_assignment_robust(robot_list, task_list, L,kappa):
     # Generate all possible numbers of unused robots (0 to n)
     # For each, build the partitions of the rest of tasks
 
-    partitions = utils.generate_partitions_robust(n,m,L)
+    partitions = utils.generate_partitions(n,m,L)
 
 
-
-    print(f"All partitions of {n} into {m}+1 parts with first part unassigned:")
-    for partition in partitions:
-        print(partition)
-    print(f"Total number of partitions: {len(partitions)}")
+    if printout:
+        print(f"All partitions of {n} into {m}+1 parts with first part unassigned:")
+        for partition in partitions:
+            print(partition)
+        print(f"Total number of partitions: {len(partitions)}")
 
 
     # Calculate mean and average reward for each each for each possible team size:
@@ -71,14 +71,15 @@ def IP_assignment_robust(robot_list, task_list, L,kappa):
                 
                 avg_rewards[team_size, task_idx] += net_reward/num_combos
 
-    # Print the average rewards matrix
-    print("Average Rewards Matrix: Rows = Team Size, Columns = Task")
-    print(avg_rewards)
-    print()
+    if printout:
+        # Print the average rewards matrix
+        print("Average Rewards Matrix: Rows = Team Size, Columns = Task")
+        print(avg_rewards)
+        print()
 
-    # Print the maximum rewards matrix
-    print("Maximum Rewards Matrix: Rows = Team Size, Columns = Task")
-    print(max_rewards)
+        # Print the maximum rewards matrix
+        print("Maximum Rewards Matrix: Rows = Team Size, Columns = Task")
+        print(max_rewards)
 
     # Calculate upper and lower bounds for each partition
     upper_bounds = np.zeros(len(partitions))
@@ -89,36 +90,32 @@ def IP_assignment_robust(robot_list, task_list, L,kappa):
             lower_bounds[partition_idx] += avg_rewards[partitions[partition_idx][task_idx+1], task_idx]
             upper_bounds[partition_idx] += max_rewards[partitions[partition_idx][task_idx+1], task_idx]
 
-    # Write partitions with their upper and lower bounds
-    print("\nPartitions with Upper and Lower Bounds:")
-    print("Partition | Lower Bound | Upper Bound")
-    print("-" * 40)
-    for partition_idx, partition in enumerate(partitions):
-        print(f"{partition} | {lower_bounds[partition_idx]:.2f} | {upper_bounds[partition_idx]:.2f}")
-    #######################################################
-    print(f"Total number of partitions: {len(partitions)}")
+    if printout:
+        # Write partitions with their upper and lower bounds
+        print("\nPartitions with Upper and Lower Bounds:")
+        print("Partition | Lower Bound | Upper Bound")
+        print("-" * 40)
+        for partition_idx, partition in enumerate(partitions):
+            print(f"{partition} | {lower_bounds[partition_idx]:.2f} | {upper_bounds[partition_idx]:.2f}")
+        print(f"Total number of partitions: {len(partitions)}")
 
 
-    """
-    Here we are testing the calculate =_upper_bounds_function
-    """
+    # """
+    # Here we are testing the calculate_upper_bounds_function
+    # """
 
-    assigned_partitions = [partition[1:] for partition in partitions]
-    print("\nAssigned Partitions: ", assigned_partitions)
-    upper_bounds_test = utils.calculate_upper_bounds(robot_list, task_list, assigned_partitions,L)
+    # assigned_partitions = [partition[1:] for partition in partitions]
+    # print("\nAssigned Partitions: ", assigned_partitions)
+    # upper_bounds_test = utils.calculate_upper_bounds(robot_list, task_list, assigned_partitions,L)
     
-    # Write partitions with their upper and lower bounds
-    print("\nPartitions with Upper Bounds:")
-    print("Partition | Upper Bound")
-    print("-" * 40)
-    for partition_idx, partition in enumerate(assigned_partitions):
-        print(f"{partition} |  {upper_bounds_test[partition_idx]:.2f}")
-    #######################################################
-    print(f"Total number of partitions: {len(partitions)}")
-
-
-
-
+    # # Write partitions with their upper and lower bounds
+    # print("\nPartitions with Upper Bounds:")
+    # print("Partition | Upper Bound")
+    # print("-" * 40)
+    # for partition_idx, partition in enumerate(assigned_partitions):
+    #     print(f"{partition} |  {upper_bounds_test[partition_idx]:.2f}")
+    # #######################################################
+    # print(f"Total number of partitions: {len(partitions)}")
 
     # Find global upper and lower bounds
     LB = max(lower_bounds)
@@ -129,10 +126,11 @@ def IP_assignment_robust(robot_list, task_list, L,kappa):
         best_partition_idx = np.argmax(upper_bounds)
         
         # Print best partition
-        print("\nBest Partition:")
-        print("Partition | Lower Bound | Upper Bound")
-        print("-" * 40)
-        print(f"{partitions[best_partition_idx]} | {lower_bounds[best_partition_idx]:.2f} | {upper_bounds[best_partition_idx]:.2f}")
+        if printout:
+            print("\nBest Partition:")
+            print("Partition | Lower Bound | Upper Bound")
+            print("-" * 40)
+            print(f"{partitions[best_partition_idx]} | {lower_bounds[best_partition_idx]:.2f} | {upper_bounds[best_partition_idx]:.2f}")
         
         # Search partition with highest UB
         #partition_without_dummy_task = partitions[best_partition_idx][1:]
@@ -145,13 +143,12 @@ def IP_assignment_robust(robot_list, task_list, L,kappa):
         if partition_reward > global_reward:
             global_reward = partition_reward
             best_assignment = partition_assignment
-            print("LB before: ", LB)
             LB = max(LB,global_reward)
-            print("LB after: ", LB)
             
-        print("\nbest_assignment: ", best_assignment)
-        print("global_reward: ", global_reward)
-        print("LB: ", LB)
+        if printout:
+            print("\nbest_assignment: ", best_assignment)
+            print("global_reward: ", global_reward)
+            print("LB: ", LB)
         
         # Trim all partitions whose UB is less than the LB
         for partition_idx in range(len(partitions) - 1, -1, -1):
@@ -160,18 +157,20 @@ def IP_assignment_robust(robot_list, task_list, L,kappa):
                 upper_bounds = np.delete(upper_bounds, partition_idx)
                 lower_bounds = np.delete(lower_bounds, partition_idx)
                 
-        ##### Write trimmed partitions with their upper and lower bounds ####
-        print("\nTrimmed Partitions with Upper and Lower Bounds:")
-        print("Partition | Lower Bound | Upper Bound")
-        print("-" * 40)
-        for partition_idx, partition in enumerate(partitions):
-            print(f"{partition} | {lower_bounds[partition_idx]:.2f} | {upper_bounds[partition_idx]:.2f}")
-        ######################################################################   
+        if printout:
+            ##### Write trimmed partitions with their upper and lower bounds ####
+            print("\nTrimmed Partitions with Upper and Lower Bounds:")
+            print("Partition | Lower Bound | Upper Bound")
+            print("-" * 40)
+            for partition_idx, partition in enumerate(partitions):
+                print(f"{partition} | {lower_bounds[partition_idx]:.2f} | {upper_bounds[partition_idx]:.2f}")
+            ######################################################################   
         
-        print("num partitions left: ", len(partitions))
-        print("num_upper_bounds left: ", len(upper_bounds))
+            print("num partitions left: ", len(partitions))
+            print("num_upper_bounds left: ", len(upper_bounds))
         
-    print("Final best_assignment: ", best_assignment)
-    print("Final global_reward: ", round(global_reward))
+    if printout:
+        print("Final best_assignment: ", best_assignment)
+        print("Final global_reward: ", round(global_reward))
     
     return best_assignment, global_reward

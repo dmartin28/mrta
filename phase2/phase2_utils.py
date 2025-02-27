@@ -2,7 +2,7 @@ from itertools import combinations
 import numpy as np
 import math
 
-def generate_partitions_robust(n, m, L):
+def generate_partitions(n, m, L):
     def partition_helper(n_remaining, m_remaining, current_partition, partitions):
         if m_remaining == 0:
             if n_remaining == 0:
@@ -20,7 +20,7 @@ def generate_partitions_robust(n, m, L):
         partition_helper(n-i, m, [i], partitions)
     return partitions
 
-def generate_partitions(n, m, L):
+def generate_partitions_all_assigned(n, m, L):
     def partition_helper(n, m, L, current_partition, partitions):
         if m == 0:
             if n == 0:

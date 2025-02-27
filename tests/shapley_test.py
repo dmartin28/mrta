@@ -1,7 +1,7 @@
 import numpy as np
-from task import Task
-from robot import Robot
-import phase1_utils as utils
+from shared_classes.task import Task
+from shared_classes.robot import Robot
+import phase1.phase1_utils as utils
 
 nu = 11 #number of robots
 mu = 5 # number of tasks

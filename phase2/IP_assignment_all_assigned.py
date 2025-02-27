@@ -1,12 +1,12 @@
 import numpy as np
 import math
 from itertools import combinations
-from robot import Robot
+from shared_classes.robot import Robot
 
 # My Code:
-import phase2_utils as utils
+import phase2.phase2_utils as utils
 
-def IP_assignment(robot_list, task_list, L, kappa, printout=False):
+def IP_assignment_all_assigned(robot_list, task_list, L, kappa, printout=False):
     
     n = len(robot_list)
     m = len(task_list)

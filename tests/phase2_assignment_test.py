@@ -1,12 +1,18 @@
 # Phase 2 assignment algorithm
-import numpy as np
-from task import Task
-from IP_assignment import IP_assignment
-from IP_assignment_robust import IP_assignment_robust
-from robot import Robot
 
-nu = 7 #number of robots 
-mu = 2 # number of tasks 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import numpy as np
+from shared_classes.task import Task
+from phase2.IP_assignment_all_assigned import IP_assignment_all_assigned
+from phase2.IP_assignment import IP_assignment
+from phase2.exhaustive_search import exhaustive_search
+from shared_classes.robot import Robot
+
+nu = 8 #number of robots 
+mu = 6 # number of tasks 
 kappa = 2 # number of capabilities
 L = 3 # maximum team size
 
@@ -115,9 +121,12 @@ for task in task_list:
     print(f"Reward Matrix:\n{task.reward_matrix}")
     print()  # Add an empty line for better readability
 
-Assignment, Reward = IP_assignment_robust(robot_list, task_list, L, kappa)
-print("Assignment: ", Assignment, "Reward: ", Reward)
+Assignment, Reward = IP_assignment(robot_list, task_list, L, kappa, printout=True)
 
+exhaustive_assignment, ex_reward = exhaustive_search(robot_list, task_list, L, kappa, printout=False)
+print()
+print("Assignment: ", Assignment, "Reward: ", Reward)
+print("Exhaustive Assignment: ", Assignment, "Reward: ", Reward)
 #This includes a dummy task that represents the robots not assigned to any task
 # Assignment_with_dummy, Reward_dummy= IP_assignment_with_dummy_task(robot_list, task_list, L)
 # print("Assignment_with_dummy: ", Assignment_with_dummy , "Reward_dummy: ", Reward_dummy)
