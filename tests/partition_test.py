@@ -1,10 +1,14 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import phase2.phase2_utils as utils
 print('here')
-n = 5
-m = 3
+n = 3
+m = 2
 L = 3
-result_all_assigned = utils.generate_partitions(n, m, L)
-result_robust = utils.generate_partitions_robust(n,m,L)
+result_all_assigned = utils.generate_partitions_all_assigned(n, m, L)
+result_robust = utils.generate_partitions(n,m,L)
 
 print(f"All partitions of {n} into {m} parts with each part <= {L}:")
 for partition in result_all_assigned:

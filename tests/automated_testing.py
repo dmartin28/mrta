@@ -11,13 +11,13 @@ from phase2.IP_assignment import IP_assignment
 from phase2.IP_assignment_all_assigned import IP_assignment_all_assigned
 import phase1.phase1_utils as utils
 
-nu = 5 #number of robots
-mu = 10 # number of tasks
+nu = 8 #number of robots
+mu = 5 # number of tasks
 kappa = 2 # number of capabilities
 L = 3 # maximum team size for a single task
-L_t = 5 # Max number of tasks in a cluster
-L_r = 5 # Max number of robots in a cluster
-num_tests = 10
+L_t = 4 # Max number of tasks in a cluster
+L_r = 4 # Max number of robots in a cluster
+num_tests = 50
 
 #Define the environment size
 max_x = 50

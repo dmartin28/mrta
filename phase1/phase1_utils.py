@@ -4,24 +4,25 @@ import math
 
 from shared_classes.task import Task
 from shared_classes.robot import Robot
-    
-def coalition_value_1(robots, tasks, kappa):
-    # Coalition value function 1: 
-    # Shapley value based capability matching + task overlap - avg distance to tasks
 
-    # Define weights for each term
-    alpha_1 = 1 # Capability matiching term
-    alpha_2 = 10 # Task overlap term
-    alpha_3 = 1 # Average distance to tasks term
-
+def find_max_index_within_limits(arr, limits):
+    # Create a mask for valid indices
+    mask = np.ones_like(arr, dtype=bool)
+    for i, limit in enumerate(limits):
+        index_arr = np.indices(arr.shape)[i]
+        mask &= (index_arr < limit)
     
-    """
-      Capability matching term ------------------------
-    """
-
-    m = len(tasks)
-    n = len(robots)
+    # Apply the mask to the array
+    masked_arr = np.ma.array(arr, mask=~mask)
     
+    # Find the index of the maximum value
+    max_index = np.unravel_index(np.ma.argmax(masked_arr), arr.shape)
+    
+    return max_index
+
+# Shapley based capability matching
+def shapley_capability_matching(robots,tasks,kappa):
+
     # Create shapley vectors
     shapley_vectors = [np.array([]) for _ in range(kappa)]
     for task in tasks:
@@ -32,29 +33,92 @@ def coalition_value_1(robots, tasks, kappa):
     # Sort shapley vectors in descending order
     for i in range(kappa):
         shapley_vectors[i] = np.sort(shapley_vectors[i])[::-1]
-
-    # Print shapley vectors
-    #print("Shapley vectors: ", shapley_vectors)
     
+    # Sum up robot capabilities
     coalition_capabilities = np.zeros(kappa, dtype=int)
     for robot in robots:
         coalition_capabilities += robot.get_capabilities().astype(int)
     
     # Calculate the total reward from capability matching
     capability_reward = 0
-    #print("Coalition capabilities: ", coalition_capabilities)
     for capability in range(kappa):
         # For each instance of the capability, add the shapley value
         for j in range(min(coalition_capabilities[capability], len(shapley_vectors[capability]))):
             capability_reward += shapley_vectors[capability][j]
-    
-    #print("Capability reward: ", capability_reward)
 
+    return capability_reward
+
+# This just guarantees that the task can be completed with the given capabilities
+def lower_bound_cap_matching(robots,tasks,kappa):
     
-    """
-    # Task overlap term --------------------------------
-    """
+    # Sum up robot capabilities
+    coalition_capabilities = np.zeros(kappa, dtype=int)
+    for robot in robots:
+        coalition_capabilities += robot.get_capabilities().astype(int)
+
+    loop = True
+    incomplete_tasks = tasks.copy()
+    cap_reward = 0
+    while loop:
+        # Search the tasks for the best that you can complete
+        loop = False #will be set to True if we need to loop again
+        max_reward = 0
+        max_team = np.zeros(kappa)
+        max_task_idx = -1 #initialize to an invalid index for error catching
+
+        # Search the tasks for the best that you can complete
+        for task_idx in range(len(incomplete_tasks)):      
+            # Determine best capabilities for task
+            reward_matrix = incomplete_tasks[task_idx].get_reward_matrix()
+            best_team = find_max_index_within_limits(reward_matrix, coalition_capabilities)
+            task_reward = reward_matrix[tuple(best_team)]
+            if task_reward > max_reward:
+                max_reward = task_reward
+                max_team = best_team
+                max_task_idx = task_idx
+        
+        if max_reward > 0:
+            # Add reward and remove task index from list of uncompleted tasks, subtract capabilities
+            cap_reward += max_reward
+            coalition_capabilities -= np.array(max_team)
+            incomplete_tasks.pop(task_idx)
+            loop = True
+    return cap_reward
+
+def avg_distance_cost(robots,tasks):
+    est_cost = 0
+    m = len(tasks)
+    for robot in robots:
+        for task in tasks:
+            est_cost += (1/m) * np.linalg.norm(np.array(robot.get_location()) - np.array(task.get_location()))
+    return est_cost
+
+def flexibility_reward(robots, tasks, kappa):
+    
+    # Can be thought of as average number of tasks each robot can be assigned to
+    
+    if len(robots)==0 or len(tasks)==0:
+        return 0
+    else:
+        # Calculate the total number of tasks that use each capability
+        task_count = np.zeros(kappa)
+        for task in tasks:
+            task_count += (task.get_grand_coalition() > 0).astype(int)
+    
+        # For each robot, add flexibility reward = sum of tasks robot could work on
+        flex_reward = 0
+        for robot in robots:
+            robot_capabilities = robot.get_capabilities()
+            robot_task_count = np.sum(task_count[robot_capabilities > 0])
+            flex_reward += robot_task_count
+
+        # # Normalize by number of robots
+        # flex_reward=flex_reward/len(robots)
+        return flex_reward
+
+def task_overlap(tasks,kappa):
     task_overlap = 0
+    m = len(tasks)
     for i in range(m):
         for j in range(i+1,m):
             grand_coalition_i = tasks[i].get_grand_coalition()
@@ -62,25 +126,94 @@ def coalition_value_1(robots, tasks, kappa):
             for k in range(kappa):
                 task_overlap += min(grand_coalition_i[k], grand_coalition_j[k])
 
-    #print("Task overlap: ", task_overlap)
+# Shapley cap matching, task overlap, avg distance
+# Result - Tasks grouped together with exact same type of tasks    
+def coalition_value_1(robots, tasks, kappa):
+    # Coalition value function 1: 
+    # Shapley value based capability matching + task overlap - avg distance to tasks
 
+    # Define weights for each term
+    alpha_1 = 1 # Capability matiching term
+    alpha_2 = 10 # Task overlap term
+    alpha_3 = 1 # Average distance to tasks term
 
-    """
-    # Average distance to tasks term -------------------
-    """
-    est_cost = 0
-    for robot in robots:
-        for task in tasks:
-            est_cost += (1/m) * np.linalg.norm(np.array(robot.get_location()) - np.array(task.get_location())) 
-    
-    #print("Estimated cost: ", est_cost)
+    cap_reward = shapley_capability_matching(robots,tasks,kappa)
+    task_overlap = task_overlap(tasks,kappa)
+    est_distance = avg_distance_cost(robots,tasks)
 
-    coalition_value = alpha_1 * capability_reward + alpha_2 * task_overlap - alpha_3 * est_cost
-
-    #print("Coalition value: ", coalition_value)
+    coalition_value = alpha_1*cap_reward + alpha_2*task_overlap - alpha_3*est_distance
 
     return coalition_value
+    """
+      Capability matching term ------------------------
+    """
 
+
+
+    # m = len(tasks)
+    # n = len(robots)
+    
+    # # Create shapley vectors
+    # shapley_vectors = [np.array([]) for _ in range(kappa)]
+    # for task in tasks:
+    #     task_shapleys = task.get_grand_shapley_vectors()
+    #     for i in range(kappa):
+    #         shapley_vectors[i] = np.concatenate([shapley_vectors[i],task_shapleys[i]])
+    
+    # # Sort shapley vectors in descending order
+    # for i in range(kappa):
+    #     shapley_vectors[i] = np.sort(shapley_vectors[i])[::-1]
+
+    # # Print shapley vectors
+    # #print("Shapley vectors: ", shapley_vectors)
+    
+    # coalition_capabilities = np.zeros(kappa, dtype=int)
+    # for robot in robots:
+    #     coalition_capabilities += robot.get_capabilities().astype(int)
+    
+    # # Calculate the total reward from capability matching
+    # capability_reward = 0
+    # #print("Coalition capabilities: ", coalition_capabilities)
+    # for capability in range(kappa):
+    #     # For each instance of the capability, add the shapley value
+    #     for j in range(min(coalition_capabilities[capability], len(shapley_vectors[capability]))):
+    #         capability_reward += shapley_vectors[capability][j]
+    
+    # #print("Capability reward: ", capability_reward)
+
+    
+    # """
+    # # Task overlap term --------------------------------
+    # """
+    # task_overlap = 0
+    # for i in range(m):
+    #     for j in range(i+1,m):
+    #         grand_coalition_i = tasks[i].get_grand_coalition()
+    #         grand_coalition_j = tasks[j].get_grand_coalition()
+    #         for k in range(kappa):
+    #             task_overlap += min(grand_coalition_i[k], grand_coalition_j[k])
+
+    # #print("Task overlap: ", task_overlap)
+
+
+    # """
+    # # Average distance to tasks term -------------------
+    # """
+    # est_cost = 0
+    # for robot in robots:
+    #     for task in tasks:
+    #         est_cost += (1/m) * np.linalg.norm(np.array(robot.get_location()) - np.array(task.get_location())) 
+    
+    # #print("Estimated cost: ", est_cost)
+
+    # coalition_value = alpha_1 * capability_reward + alpha_2 * task_overlap - alpha_3 * est_cost
+
+    # #print("Coalition value: ", coalition_value)
+
+    # return coalition_value
+
+# Shapley cap matching, num tasks, avg distance
+# Result - tasks bunched up in groups without robots
 def coalition_value_2(robots, tasks, kappa):
     # Coalition value function 1: 
     # Shapley value based capability matching + task overlap - avg distance to tasks
@@ -160,3 +293,32 @@ def coalition_value_2(robots, tasks, kappa):
 
     return coalition_value
 
+# Shapley cap matching, flexibility, avg distance
+def coalition_value_3(robots,tasks,kappa):
+    # Define weights for each term
+    alpha_1 = 1 # Capability matching term
+    alpha_2 = 20 # Flexibility term
+    alpha_3 = 1 # Average distance to tasks term
+
+    cap_reward = shapley_capability_matching(robots,tasks,kappa)
+    flex_reward = flexibility_reward(robots,tasks,kappa)
+    est_distance = avg_distance_cost(robots,tasks)
+
+    coalition_value = alpha_1*cap_reward + alpha_2*flex_reward - alpha_3*est_distance
+
+    return coalition_value
+
+# LB cap matching, flexibility, avg distance
+def coalition_value_4(robots,tasks,kappa):
+    # Define weights for each term
+    alpha_1 = 1 # Capability matching term
+    alpha_2 = 50 # Flexibility term
+    alpha_3 = 1 # Average distance to tasks term
+
+    cap_reward = lower_bound_cap_matching(robots,tasks,kappa)
+    flex_reward = flexibility_reward(robots,tasks,kappa)
+    est_distance = avg_distance_cost(robots,tasks)
+
+    coalition_value = alpha_1*cap_reward + alpha_2*flex_reward - alpha_3*est_distance
+
+    return coalition_value
