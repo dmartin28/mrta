@@ -6,13 +6,15 @@ import numpy as np
 import random
 from shared_classes.task import Task
 from shared_classes.robot import Robot
-from phase1.generate_clusters import generate_clusters
+from phase1.generate_clusters import generate_clusters_move
+from phase1.generate_clusters import generate_clusters_merge
+from phase1.generate_clusters import generate_clusters_movemerge
 from phase2.IP_assignment import IP_assignment
 from phase2.IP_assignment_all_assigned import IP_assignment_all_assigned
 import phase1.phase1_utils as utils
 
-nu = 8 #number of robots
-mu = 5 # number of tasks
+nu = 1 #number of robots
+mu = 10 # number of tasks
 kappa = 2 # number of capabilities
 L = 3 # maximum team size for a single task
 L_t = 4 # Max number of tasks in a cluster
@@ -30,44 +32,55 @@ min_y = 0
 #Reward matrix dimensions is (L+1)^kappa (0 to L for each capability)
 reward_dim = tuple(L+1 for _ in range(kappa))
 
-#Type 1 can be done by robots with capability 1 
+#Type 0 can be done by robots with capability 1 
 task_type_0 = np.zeros(reward_dim)
 task_type_0[1,0] = 100
 task_type_0[2,0] = 200
 
-#Type 2 can be done by robots with capability 2 
+#Type 1 can be done by robots with capability 2 
 task_type_1 = np.zeros(reward_dim)
 task_type_1[0,1] = 100
 task_type_1[0,2] = 150
 task_type_1[0,3] = 200
 
-#Type 3 can be done only collaboratively by cap 1 and 2 
+#Type 2 can be done only collaboratively by cap 1 and 2 
 task_type_2 = np.zeros(reward_dim)
 task_type_2[1,1] = 200
 task_type_2[1,2] = 250
 task_type_2[2,1] = 300
 
-#Type 4 can be done only collaboratively by two of cap 1 
+#Type 3 can be done only collaboratively by two of cap 1 
 task_type_3 = np.zeros(reward_dim)
 task_type_3[2,0] = 200
 
-#Type 5 can be done only collaboratively by two of cap 2 
+#Type 4 can be done only collaboratively by two of cap 2 
 task_type_4 = np.zeros(reward_dim)
 task_type_4[0,2] = 200
 
-# #Type 6 can be done only collaboratively by cap 1 and 2 
-# task_type_6 = np.zeros(reward_dim)
-# task_type_6[1,1] = 200
-# task_type_6[1,2] = 220
-# task_type_6[2,1] = 220
+#Type 5 can be done only collaboratively by cap 1 and 2 
+task_type_5 = np.zeros(reward_dim)
+task_type_5[1,1] = 200
+task_type_5[1,2] = 220
+task_type_5[2,1] = 220
 
-# #Type 7 can be done only collaboratively by two of cap 1 
-# task_type_7 = np.zeros(reward_dim)
-# task_type_7[1,0] = 100
+#Type 6 can be done only individually by type 1
+task_type_6 = np.zeros(reward_dim)
+task_type_6[1,0] = 100
 
-# #Type 8 can be done only collaboratively by two of cap 2 
-# task_type_8 = np.zeros(reward_dim)
-# task_type_8[0,1] = 100
+#Type 7 can be done only individually by type 2 
+task_type_7 = np.zeros(reward_dim)
+task_type_7[0,1] = 100
+
+#Type 8 can be done by either type:
+task_type_8 = np.zeros(reward_dim)
+task_type_8[1,0] = 100
+task_type_8[0,1] = 100
+
+#Type 9 can be done by either type, and collaboratively:
+task_type_9 = np.zeros(reward_dim)
+task_type_9[1,0] = 100
+task_type_9[0,1] = 100
+task_type_9[1,1] = 250
 #####################################################
 
 #Define the two robot types:
@@ -99,7 +112,8 @@ for test in range(num_tests):
         robot_list.append(robot)
 
     # Create tasks
-    task_types = [task_type_0, task_type_1, task_type_2, task_type_3, task_type_4]
+    task_types = [task_type_0, task_type_1, task_type_2, task_type_3, task_type_4,
+                  task_type_5, task_type_6, task_type_7, task_type_8, task_type_9]
     for i in range(mu):
         task_type = random.choice(task_types)
         task = Task(i, task_type, task_x_locations[i], task_y_locations[i])
@@ -111,7 +125,7 @@ for test in range(num_tests):
         print("Error, no robots or tasks to cluster")
         clusters = []
     else:
-        clusters = generate_clusters(robot_list, task_list, L_r, L_t)
+        clusters = generate_clusters_merge(robot_list, task_list, L_r, L_t)
 
     # Perform the phase 2 optimal assignment inside each cluster
     cluster_assignments = []
@@ -147,3 +161,4 @@ avg_optimal_reward = total_optimal_reward / num_tests
 print("\n--- Final Results ---")
 print(f"Average Clustered Reward: {avg_clustered_reward}")
 print(f"Average Optimal Reward: {avg_optimal_reward}")
+print(f"Percent: {100*avg_clustered_reward/avg_optimal_reward}%")
