@@ -10,12 +10,12 @@ from phase2.IP_assignment import IP_assignment
 from phase2.IP_assignment_all_assigned import IP_assignment_all_assigned
 import phase1.phase1_utils as utils
 
-nu = 0 #number of robots
-mu = 0 # number of tasks
+nu = 8 #number of robots
+mu = 5 # number of tasks
 kappa = 2 # number of capabilities
 L = 3 # maximum team size for a single task
-L_t = 10 # Max number of tasks in a cluster
-L_r = 8 # Max number of robots in a cluster
+L_t = 5 # Max number of tasks in a cluster
+L_r = 5 # Max number of robots in a cluster
 
 #Define the environment size
 max_x = 50
@@ -135,7 +135,7 @@ for i in range(len(clusters)):
     print("Robots: ", cluster[0])
     print("Tasks: ", cluster[1])
     #print("Cluster Value: ", utils.coalition_value_1([robot_list[r] for r in cluster[0]], [task_list[t] for t in cluster[1]], kappa))
-    print("Cluster Value: ", utils.coalition_value_2([robot_list[r] for r in cluster[0]], [task_list[t] for t in cluster[1]], kappa))
+    print("Cluster Value: ", utils.coalition_value([robot_list[r] for r in cluster[0]], [task_list[t] for t in cluster[1]], kappa))
     # Print cluster capabilities
     cluster_capabilities = np.zeros(kappa, dtype=int)
     for robot in cluster[0]:

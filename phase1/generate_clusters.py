@@ -36,11 +36,11 @@ def generate_clusters(robot_list,task_list,L_r,L_t):
                 if len(clusters[i][0]) + len(clusters[j][0]) <= L_r and len(clusters[i][1]) + len(clusters[j][1]) <= L_t:
                     merged_cluster = [clusters[i][0] + clusters[j][0], clusters[i][1] + clusters[j][1]]
                     #print("Merged cluster: ", merged_cluster)
-                    merged_value = utils.coalition_value_4([robot_list[r] for r in merged_cluster[0]], [task_list[t] for t in merged_cluster[1]], kappa)
+                    merged_value = utils.coalition_value([robot_list[r] for r in merged_cluster[0]], [task_list[t] for t in merged_cluster[1]], kappa)
 
                     #Can probably store these values so we don't recompute each time:
-                    clusteri_val = utils.coalition_value_4([robot_list[r] for r in clusters[i][0]], [task_list[t] for t in clusters[i][1]], kappa)
-                    clusterj_val = utils.coalition_value_4([robot_list[r] for r in clusters[j][0]], [task_list[t] for t in clusters[j][1]], kappa)
+                    clusteri_val = utils.coalition_value([robot_list[r] for r in clusters[i][0]], [task_list[t] for t in clusters[i][1]], kappa)
+                    clusterj_val = utils.coalition_value([robot_list[r] for r in clusters[j][0]], [task_list[t] for t in clusters[j][1]], kappa)
                     difference = merged_value - clusteri_val - clusterj_val
 
                     if difference > max_change:

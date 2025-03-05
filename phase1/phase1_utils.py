@@ -10,7 +10,7 @@ def find_max_index_within_limits(arr, limits):
     mask = np.ones_like(arr, dtype=bool)
     for i, limit in enumerate(limits):
         index_arr = np.indices(arr.shape)[i]
-        mask &= (index_arr < limit)
+        mask &= (index_arr <= limit)
     
     # Apply the mask to the array
     masked_arr = np.ma.array(arr, mask=~mask)
@@ -51,15 +51,19 @@ def shapley_capability_matching(robots,tasks,kappa):
 # This just guarantees that the task can be completed with the given capabilities
 def lower_bound_cap_matching(robots,tasks,kappa):
     
+    #print("\n New Call: -------------------------------")
     # Sum up robot capabilities
     coalition_capabilities = np.zeros(kappa, dtype=int)
     for robot in robots:
         coalition_capabilities += robot.get_capabilities().astype(int)
+    #print("coalition_capabilities: ", coalition_capabilities)
 
     loop = True
     incomplete_tasks = tasks.copy()
     cap_reward = 0
     while loop:
+        #print("\nStart Loop:")
+        #print("Incomplete Tasks: ", len(incomplete_tasks))
         # Search the tasks for the best that you can complete
         loop = False #will be set to True if we need to loop again
         max_reward = 0
@@ -71,18 +75,25 @@ def lower_bound_cap_matching(robots,tasks,kappa):
             # Determine best capabilities for task
             reward_matrix = incomplete_tasks[task_idx].get_reward_matrix()
             best_team = find_max_index_within_limits(reward_matrix, coalition_capabilities)
-            task_reward = reward_matrix[tuple(best_team)]
+            task_reward = reward_matrix[best_team]
+            #print("Reward Matrix: ")
+            #print(reward_matrix)
+            #print("best_capabilities: ", best_team)
             if task_reward > max_reward:
                 max_reward = task_reward
                 max_team = best_team
                 max_task_idx = task_idx
         
         if max_reward > 0:
+            #print("max_reward: ", max_reward, )
+            #print(f"Task {tasks[task_idx].get_id()} assigned to team {best_team}")
             # Add reward and remove task index from list of uncompleted tasks, subtract capabilities
             cap_reward += max_reward
             coalition_capabilities -= np.array(max_team)
             incomplete_tasks.pop(task_idx)
+            #print("updated coalition_capabilities: ", coalition_capabilities)
             loop = True
+    #print("Cap Reward: ", cap_reward)
     return cap_reward
 
 def avg_distance_cost(robots,tasks):
@@ -125,6 +136,11 @@ def task_overlap(tasks,kappa):
             grand_coalition_j = tasks[j].get_grand_coalition()
             for k in range(kappa):
                 task_overlap += min(grand_coalition_i[k], grand_coalition_j[k])
+
+# Here choose which value function to use
+def coalition_value(robots,tasks,kappa):
+    return coalition_value_4(robots,tasks,kappa)
+    
 
 # Shapley cap matching, task overlap, avg distance
 # Result - Tasks grouped together with exact same type of tasks    
