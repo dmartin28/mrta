@@ -125,7 +125,7 @@ for test in range(num_tests):
         print("Error, no robots or tasks to cluster")
         clusters = []
     else:
-        clusters = generate_clusters_merge(robot_list, task_list, L_r, L_t)
+        clusters = generate_clusters_move(robot_list, task_list, L_r, L_t)
 
     # Perform the phase 2 optimal assignment inside each cluster
     cluster_assignments = []

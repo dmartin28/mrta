@@ -144,7 +144,7 @@ def task_overlap(tasks,kappa):
 
 # Here choose which value function to use
 def coalition_value(robots,tasks,kappa):
-    return coalition_value_3(robots,tasks,kappa)
+    return coalition_value_4(robots,tasks,kappa)
     
 
 # Shapley cap matching, task overlap, avg distance
@@ -317,7 +317,7 @@ def coalition_value_2(robots, tasks, kappa):
 # Shapley cap matching, flexibility, avg distance
 def coalition_value_3(robots,tasks,kappa):
     # Define weights for each term
-    alpha_1 = 10 # Capability matching term
+    alpha_1 = 1000 # Capability matching term
     alpha_2 = 100 # Flexibility term
     alpha_3 = 1 # Average distance to tasks term
 
@@ -332,7 +332,7 @@ def coalition_value_3(robots,tasks,kappa):
 # LB cap matching, flexibility, avg distance
 def coalition_value_4(robots,tasks,kappa):
     # Define weights for each term
-    alpha_1 = 10 # Capability matching term
+    alpha_1 = 1000 # Capability matching term
     alpha_2 = 100 # Flexibility term
     alpha_3 = 1 # Average distance to tasks term
 
