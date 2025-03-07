@@ -56,6 +56,61 @@ def generate_clusters_merge(robot_list,task_list,L_r,L_t):
             equilibrium = True
     return clusters
 
+def nash_eq_clustering(robot_list, task_list, L_r):
+    kappa = len(robot_list[0].get_capabilities())
+
+    #Initialize each robot + task in their individual cluster
+    clusters = []
+    for robot in robot_list:
+        clusters.append([[robot.id], []])
+    for task in task_list:
+        clusters.append([[], [task.id]])
+    # Each cluster is 2D array, row 1 are robot indices, row 2 are task indices
+
+    equilibrium = False
+    while not equilibrium:
+        equilibrium = True
+
+        # Search through all potential robot moves
+        best_move = None
+        max_change = 0
+
+        for i, source_cluster in enumerate(clusters):
+            for j, robot_id in enumerate(source_cluster[0]):
+                for k, target_cluster in enumerate(clusters):
+                    if i != k and len(target_cluster[0]) < L_r:
+                        # Calculate current values
+                        current_value = utils.nash_eq_coalition_val([robot_list[r] for r in source_cluster[0]], [task_list[t] for t in source_cluster[1]], kappa,L_r)
+                        target_value = utils.nash_eq_coalition_val([robot_list[r] for r in target_cluster[0]], [task_list[t] for t in target_cluster[1]], kappa,L_r)
+
+                        # Calculate new values after potential move
+                        new_source_value = utils.nash_eq_coalition_val([robot_list[r] for r in source_cluster[0] if r != robot_id], [task_list[t] for t in source_cluster[1]], kappa,L_r)
+                        new_target_value = utils.nash_eq_coalition_val([robot_list[r] for r in target_cluster[0]] + [robot_list[robot_id]], [task_list[t] for t in target_cluster[1]], kappa,L_r)
+
+                        # Calculate net change
+                        change = (new_source_value + new_target_value) - (current_value + target_value)
+
+                        if change > max_change:
+                            max_change = change
+                            best_move = (i, k, robot_id)
+
+        # Perform the best robot move if it increases the net value
+        if max_change > 0:
+            equilibrium = False
+            source_cluster_index, target_cluster_index, robot_id_to_move = best_move
+
+            # Remove the robot from its current cluster
+            clusters[source_cluster_index][0].remove(robot_id_to_move)
+
+            # Add the robot to the target cluster
+            clusters[target_cluster_index][0].append(robot_id_to_move)
+
+            # If the source cluster is now empty, remove it
+            if len(clusters[source_cluster_index][0]) == 0 and len(clusters[source_cluster_index][1]) == 0:
+                clusters.pop(source_cluster_index)
+
+    return clusters
+
 def generate_clusters_move(robot_list, task_list, L_r, L_t):
     
     kappa = len(robot_list[0].get_capabilities())

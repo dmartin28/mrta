@@ -14,6 +14,9 @@ class Task:
         grand_coalition_tuple = np.unravel_index(flat_index, self.reward_matrix.shape)
         self.grand_coalition = np.array(grand_coalition_tuple)
         self.grand_shapley_vectors = self.get_shapley_vectors(self.grand_coalition)
+        
+        # Determine maximum resource utilizations:
+        self.max_resources = self.find_greatest_nonzero_indices()
 
 
     def get_id(self):
@@ -27,6 +30,9 @@ class Task:
 
     def get_dimensions(self):
         return self.reward_matrix.shape
+    
+    def get_max_resources(self):
+        return self.max_resources
 
     def get_reward(self, *indices):
         try:
@@ -49,6 +55,26 @@ class Task:
 
     def __str__(self):
         return f"Task with reward matrix:\n{self.reward_matrix}"
+    
+    def find_greatest_nonzero_indices(self):
+        # Get the number of dimensions
+        n_dims = self.reward_matrix.ndim
+    
+        # Initialize the NumPy array to store the greatest non-zero indices
+        greatest_indices = np.zeros(n_dims, dtype=int)
+    
+        # Iterate through each dimension
+        for dim in range(n_dims):
+            # Create a boolean array where True indicates a non-zero value along this dimension
+            nonzero_along_dim = np.any(self.reward_matrix != 0, axis=tuple(i for i in range(n_dims) if i != dim))
+        
+            # Find the greatest index with a non-zero value (or 0 if no such index exists)
+            greatest_index = np.max(np.where(nonzero_along_dim)[0]) if np.any(nonzero_along_dim) else 0
+        
+            # Set this index in our NumPy array
+            greatest_indices[dim] = greatest_index
+    
+        return greatest_indices
     
     def get_shapley_vectors(self,coalition): # Note: coalition is an np array of capability amounts
         """

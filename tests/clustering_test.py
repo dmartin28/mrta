@@ -4,14 +4,20 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 import random
+import matplotlib.pyplot as plt
+
 from shared_classes.task import Task
 from shared_classes.robot import Robot
-from phase1.generate_clusters import generate_clusters_merge
-from phase1.generate_clusters import generate_clusters_move
-from phase1.generate_clusters import generate_clusters_mergemove
+import phase1.generate_clusters as gc
+# from phase1.generate_clusters import generate_clusters_move
+# from phase1.generate_clusters import generate_clusters_mergemove
+# from phase1.generate_clusters import generate_clusters_movemerge
 from phase2.IP_assignment import IP_assignment
 from phase2.IP_assignment_all_assigned import IP_assignment_all_assigned
+import visuals.plot_clusters as visuals
 import phase1.phase1_utils as utils
+
+# random.seed(42)
 
 nu = 8 #number of robots
 mu = 5 # number of tasks
@@ -31,28 +37,28 @@ min_y = 0
 #Reward matrix dimensions is (L+1)^kappa (0 to L for each capability)
 reward_dim = tuple(L+1 for _ in range(kappa))
 
-#Type 1 can be done by robots with capability 1 
+#Type 0 can be done by robots with capability 1 
 task_type_0 = np.zeros(reward_dim)
 task_type_0[1,0] = 100
 task_type_0[2,0] = 200
 
-#Type 2 can be done by robots with capability 2 
+#Type 1 can be done by robots with capability 2 
 task_type_1 = np.zeros(reward_dim)
 task_type_1[0,1] = 100
 task_type_1[0,2] = 150
 task_type_1[0,3] = 200
 
-#Type 3 can be done only collaboratively by cap 1 and 2 
+#Type 2 can be done only collaboratively by cap 1 and 2 
 task_type_2 = np.zeros(reward_dim)
 task_type_2[1,1] = 200
 task_type_2[1,2] = 250
 task_type_2[2,1] = 300
 
-#Type 4 can be done only collaboratively by two of cap 1 
+#Type 3 can be done only collaboratively by two of cap 1 
 task_type_3 = np.zeros(reward_dim)
 task_type_3[2,0] = 200
 
-#Type 5 can be done only collaboratively by two of cap 2 
+#Type 4 can be done only collaboratively by two of cap 2 
 task_type_4 = np.zeros(reward_dim)
 task_type_4[0,2] = 200
 
@@ -114,10 +120,7 @@ for task in task_list:
     print()  # Add an empty line for better readability
 
 """---Start Generate Clusters---"""
-
-clusters_merge = generate_clusters_merge(robot_list, task_list, L_r, L_t)
-clusters_move = generate_clusters_move(robot_list, task_list, L_r, L_t)
-clusters_mergemove = generate_clusters_mergemove(robot_list, task_list, L_r, L_t)
+clusters_nash_eq = gc.nash_eq_clustering(robot_list, task_list, L_r=L)
 """---End Generate Clusters---"""
 
 def process_clusters(clusters, robot_list, task_list, L, kappa):
@@ -139,7 +142,7 @@ def print_cluster_results(clusters, cluster_assignments, cluster_assign_rewards,
         print("Cluster: ", i)
         print("Robots: ", cluster[0])
         print("Tasks: ", cluster[1])
-        print("Cluster Value: ", utils.coalition_value([robot_list[r] for r in cluster[0]], [task_list[t] for t in cluster[1]], kappa))
+        print("Cluster Value: ", utils.nash_eq_coalition_val([robot_list[r] for r in cluster[0]], [task_list[t] for t in cluster[1]], kappa,L))
         
         # Print cluster capabilities
         cluster_capabilities = np.zeros(kappa, dtype=int)
@@ -170,44 +173,14 @@ def get_global_assignment(clusters, cluster_assignments, mu):
     global_assignment.insert(0, unused_robots)
     return global_assignment
 
-# Process merge clusters
-cluster_assignments_merge, cluster_assign_rewards_merge = process_clusters(clusters_merge, robot_list, task_list, L, kappa)
-clustered_reward_merge = print_cluster_results(clusters_merge, cluster_assignments_merge, cluster_assign_rewards_merge, robot_list, task_list, kappa, "Merge")
-global_assignment_merge = get_global_assignment(clusters_merge, cluster_assignments_merge, mu)
+# Process Nash equilibrium clusters
+cluster_assignments_nash_eq, cluster_assign_rewards_nash_eq = process_clusters(clusters_nash_eq, robot_list, task_list, L, kappa)
+clustered_reward_nash_eq = print_cluster_results(clusters_nash_eq, cluster_assignments_nash_eq, cluster_assign_rewards_nash_eq, robot_list, task_list, kappa, "Nash Equilibrium")
+global_assignment_nash_eq = get_global_assignment(clusters_nash_eq, cluster_assignments_nash_eq, mu)
 
-print("Merge Method Results:")
-print("Clustered Reward: ", clustered_reward_merge)
-print("Clustered Assignment: ", global_assignment_merge)
-print()
-
-# Process move clusters
-cluster_assignments_move, cluster_assign_rewards_move = process_clusters(clusters_move, robot_list, task_list, L, kappa)
-clustered_reward_move = print_cluster_results(clusters_move, cluster_assignments_move, cluster_assign_rewards_move, robot_list, task_list, kappa, "Move")
-global_assignment_move = get_global_assignment(clusters_move, cluster_assignments_move, mu)
-
-print("Move Method Results:")
-print("Clustered Reward: ", clustered_reward_move)
-print("Clustered Assignment: ", global_assignment_move)
-
-# Print flexibility reward for each cluster
-print("\nFlexibility Rewards for Each Cluster:")
-for i, cluster in enumerate(clusters_move):
-    cluster_robots = [robot_list[r] for r in cluster[0]]
-    cluster_tasks = [task_list[t] for t in cluster[1]]
-    flex_reward = utils.flexibility_reward(cluster_robots, cluster_tasks, kappa)
-    print(f"Cluster {i}: {flex_reward:.2f}")
-
-print()
-
-# Process mergemove clusters
-clusters_mergemove = generate_clusters_mergemove(robot_list, task_list, L_r, L_t)
-cluster_assignments_mergemove, cluster_assign_rewards_mergemove = process_clusters(clusters_mergemove, robot_list, task_list, L, kappa)
-clustered_reward_mergemove = print_cluster_results(clusters_mergemove, cluster_assignments_mergemove, cluster_assign_rewards_mergemove, robot_list, task_list, kappa, "MergeMove")
-global_assignment_mergemove = get_global_assignment(clusters_mergemove, cluster_assignments_mergemove, mu)
-
-print("MergeMove Method Results:")
-print("Clustered Reward: ", clustered_reward_mergemove)
-print("Clustered Assignment: ", global_assignment_mergemove)
+print("Nash Equilibrium Method Results:")
+print("Clustered Reward: ", clustered_reward_nash_eq)
+print("Clustered Assignment: ", global_assignment_nash_eq)
 print()
 
 # Compare to direct optimal assignment
@@ -218,10 +191,18 @@ print("Optimal Reward: ", optimal_reward)
 
 # Compare results
 print("\nComparison:")
-print(f"Merge Method Reward: {clustered_reward_merge}")
-print(f"Move Method Reward: {clustered_reward_move}")
-print(f"MergeMove Method Reward: {clustered_reward_mergemove}")
+print(f"Nash Equilibrium Method Reward: {clustered_reward_nash_eq}")
 print(f"Optimal Reward: {optimal_reward}")
-print(f"Merge Method Efficiency: {clustered_reward_merge / optimal_reward * 100:.2f}%")
-print(f"Move Method Efficiency: {clustered_reward_move / optimal_reward * 100:.2f}%")
-print(f"MergeMove Method Efficiency: {clustered_reward_mergemove / optimal_reward * 100:.2f}%")
+print(f"Nash Equilibrium Method Efficiency: {clustered_reward_nash_eq / optimal_reward * 100:.2f}%")
+
+# Create subplots for optimal and Nash equilibrium assignments
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+
+# Plot optimal assignment
+visuals.plot_assignments(optimal_assignment, robot_list, task_list, max_x, max_y, title="Optimal Assignment", ax=ax1)
+
+# Plot Nash equilibrium assignment
+visuals.plot_clusters(clusters_nash_eq, cluster_assignments_nash_eq, robot_list, task_list, max_x, max_y, title ="Nash Equilibrium Assignment", ax=ax2)
+
+plt.tight_layout()
+plt.show()

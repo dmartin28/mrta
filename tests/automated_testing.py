@@ -9,17 +9,18 @@ from shared_classes.robot import Robot
 from phase1.generate_clusters import generate_clusters_move
 from phase1.generate_clusters import generate_clusters_merge
 from phase1.generate_clusters import generate_clusters_movemerge
+from phase1.generate_clusters import nash_eq_clustering
 from phase2.IP_assignment import IP_assignment
 from phase2.IP_assignment_all_assigned import IP_assignment_all_assigned
 import phase1.phase1_utils as utils
 
-nu = 1 #number of robots
-mu = 10 # number of tasks
+nu = 5 #number of robots
+mu = 5 # number of tasks
 kappa = 2 # number of capabilities
 L = 3 # maximum team size for a single task
 L_t = 4 # Max number of tasks in a cluster
 L_r = 4 # Max number of robots in a cluster
-num_tests = 50
+num_tests = 200
 
 #Define the environment size
 max_x = 50
@@ -81,6 +82,13 @@ task_type_9 = np.zeros(reward_dim)
 task_type_9[1,0] = 100
 task_type_9[0,1] = 100
 task_type_9[1,1] = 250
+
+# #Type 9 can be done by either type but needs 3:
+# task_type_9 = np.zeros(reward_dim)
+# task_type_9[1,2] = 350
+# task_type_9[2,1] = 350
+# task_type_9[3,0] = 350
+# task_type_9[0,3] = 350
 #####################################################
 
 #Define the two robot types:
@@ -125,7 +133,7 @@ for test in range(num_tests):
         print("Error, no robots or tasks to cluster")
         clusters = []
     else:
-        clusters = generate_clusters_move(robot_list, task_list, L_r, L_t)
+        clusters = nash_eq_clustering(robot_list, task_list, L)
 
     # Perform the phase 2 optimal assignment inside each cluster
     cluster_assignments = []
