@@ -181,20 +181,19 @@ def nash_eq_coalition_val(robots, tasks, kappa,L):
     
     # Calculate resource utilization and distance penalty for robots not in best team
     potential_resource_utilization = 0
-    unused_cap = np.zeros(kappa)
+    capabilities = np.zeros(kappa)
     distance_penalty = 0
     max_resources = task.get_max_resources()
     
     for robot in robots:
-        if robot not in best_team:
-            # Add unused capabilities
-            unused_cap += robot.get_capabilities()
+            
+            capabilities += robot.get_capabilities()
             
             # Calculate distance penalty -is this average distance?
             distance_penalty += np.linalg.norm(np.array(robot.get_location()) - np.array(task.get_location()))
             
     for i in range(kappa):
-        potential_resource_utilization += min(max_resources[i],unused_cap[i])
+        potential_resource_utilization += min(max_resources[i],capabilities[i])
         
     # # Calculate final coalition value
     # print("\n Robots, Tasks: ", len(robots), len(tasks))
@@ -209,7 +208,7 @@ def nash_eq_coalition_val(robots, tasks, kappa,L):
 
 # Here choose which value function to use
 def coalition_value(robots,tasks,kappa):
-    return coalition_value_4(robots,tasks,kappa)
+    return coalition_value_3(robots,tasks,kappa)
     
 
 # Shapley cap matching, task overlap, avg distance
@@ -301,7 +300,7 @@ def coalition_value_1(robots, tasks, kappa):
 # Shapley cap matching, num tasks, avg distance
 # Result - tasks bunched up in groups without robots
 def coalition_value_2(robots, tasks, kappa):
-    # Coalition value function 1: 
+    # Coalition value function 2: 
     # Shapley value based capability matching + task overlap - avg distance to tasks
 
     # Define weights for each term

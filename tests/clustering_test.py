@@ -5,7 +5,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
 import random
 import matplotlib.pyplot as plt
-
 from shared_classes.task import Task
 from shared_classes.robot import Robot
 import phase1.generate_clusters as gc
@@ -121,6 +120,7 @@ for task in task_list:
 
 """---Start Generate Clusters---"""
 clusters_nash_eq = gc.nash_eq_clustering(robot_list, task_list, L_r=L)
+clusters_refined = gc.refine_clusters_merge(clusters_nash_eq,robot_list, task_list, L_r,L_t)
 """---End Generate Clusters---"""
 
 def process_clusters(clusters, robot_list, task_list, L, kappa):
@@ -178,9 +178,24 @@ cluster_assignments_nash_eq, cluster_assign_rewards_nash_eq = process_clusters(c
 clustered_reward_nash_eq = print_cluster_results(clusters_nash_eq, cluster_assignments_nash_eq, cluster_assign_rewards_nash_eq, robot_list, task_list, kappa, "Nash Equilibrium")
 global_assignment_nash_eq = get_global_assignment(clusters_nash_eq, cluster_assignments_nash_eq, mu)
 
+# Process Nash equilibrium clusters
+cluster_assignments_nash_eq, cluster_assign_rewards_nash_eq = process_clusters(clusters_nash_eq, robot_list, task_list, L, kappa)
+clustered_reward_nash_eq = print_cluster_results(clusters_nash_eq, cluster_assignments_nash_eq, cluster_assign_rewards_nash_eq, robot_list, task_list, kappa, "Nash Equilibrium")
+global_assignment_nash_eq = get_global_assignment(clusters_nash_eq, cluster_assignments_nash_eq, mu)
+
 print("Nash Equilibrium Method Results:")
 print("Clustered Reward: ", clustered_reward_nash_eq)
 print("Clustered Assignment: ", global_assignment_nash_eq)
+print()
+
+# Process refined clusters
+cluster_assignments_refined, cluster_assign_rewards_refined = process_clusters(clusters_refined, robot_list, task_list, L, kappa)
+clustered_reward_refined = print_cluster_results(clusters_refined, cluster_assignments_refined, cluster_assign_rewards_refined, robot_list, task_list, kappa, "Refined")
+global_assignment_refined = get_global_assignment(clusters_refined, cluster_assignments_refined, mu)
+
+print("Refined Clustering Method Results:")
+print("Clustered Reward: ", clustered_reward_refined)
+print("Clustered Assignment: ", global_assignment_refined)
 print()
 
 # Compare to direct optimal assignment
@@ -192,17 +207,22 @@ print("Optimal Reward: ", optimal_reward)
 # Compare results
 print("\nComparison:")
 print(f"Nash Equilibrium Method Reward: {clustered_reward_nash_eq}")
+print(f"Refined Clustering Method Reward: {clustered_reward_refined}")
 print(f"Optimal Reward: {optimal_reward}")
 print(f"Nash Equilibrium Method Efficiency: {clustered_reward_nash_eq / optimal_reward * 100:.2f}%")
+print(f"Refined Clustering Method Efficiency: {clustered_reward_refined / optimal_reward * 100:.2f}%")
 
-# Create subplots for optimal and Nash equilibrium assignments
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+# Create subplots for optimal, Nash equilibrium, and refined assignments
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 6))
 
 # Plot optimal assignment
 visuals.plot_assignments(optimal_assignment, robot_list, task_list, max_x, max_y, title="Optimal Assignment", ax=ax1)
 
 # Plot Nash equilibrium assignment
-visuals.plot_clusters(clusters_nash_eq, cluster_assignments_nash_eq, robot_list, task_list, max_x, max_y, title ="Nash Equilibrium Assignment", ax=ax2)
+visuals.plot_clusters(clusters_nash_eq, cluster_assignments_nash_eq, robot_list, task_list, max_x, max_y, title="Nash Equilibrium Assignment", ax=ax2)
+
+# Plot refined assignment
+visuals.plot_clusters(clusters_refined, cluster_assignments_refined, robot_list, task_list, max_x, max_y, title="Refined Assignment", ax=ax3)
 
 plt.tight_layout()
 plt.show()
