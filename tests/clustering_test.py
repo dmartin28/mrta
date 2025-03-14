@@ -4,6 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 import random
+import copy
 import matplotlib.pyplot as plt
 from shared_classes.task import Task
 from shared_classes.robot import Robot
@@ -120,7 +121,8 @@ for task in task_list:
 
 """---Start Generate Clusters---"""
 clusters_nash_eq = gc.nash_eq_clustering(robot_list, task_list, L_r=L)
-clusters_refined = gc.refine_clusters_merge(clusters_nash_eq,robot_list, task_list, L_r,L_t)
+clusters_refined = copy.deepcopy(clusters_nash_eq)
+clusters_refined = gc.refine_clusters_merge(clusters_refined, robot_list, task_list, L_r, L_t)
 """---End Generate Clusters---"""
 
 def process_clusters(clusters, robot_list, task_list, L, kappa):
@@ -142,7 +144,7 @@ def print_cluster_results(clusters, cluster_assignments, cluster_assign_rewards,
         print("Cluster: ", i)
         print("Robots: ", cluster[0])
         print("Tasks: ", cluster[1])
-        print("Cluster Value: ", utils.nash_eq_coalition_val([robot_list[r] for r in cluster[0]], [task_list[t] for t in cluster[1]], kappa,L))
+        #print("Cluster Value: ", utils.nash_eq_coalition_val([robot_list[r] for r in cluster[0]], [task_list[t] for t in cluster[1]], kappa,L))
         
         # Print cluster capabilities
         cluster_capabilities = np.zeros(kappa, dtype=int)
@@ -172,11 +174,6 @@ def get_global_assignment(clusters, cluster_assignments, mu):
 
     global_assignment.insert(0, unused_robots)
     return global_assignment
-
-# Process Nash equilibrium clusters
-cluster_assignments_nash_eq, cluster_assign_rewards_nash_eq = process_clusters(clusters_nash_eq, robot_list, task_list, L, kappa)
-clustered_reward_nash_eq = print_cluster_results(clusters_nash_eq, cluster_assignments_nash_eq, cluster_assign_rewards_nash_eq, robot_list, task_list, kappa, "Nash Equilibrium")
-global_assignment_nash_eq = get_global_assignment(clusters_nash_eq, cluster_assignments_nash_eq, mu)
 
 # Process Nash equilibrium clusters
 cluster_assignments_nash_eq, cluster_assign_rewards_nash_eq = process_clusters(clusters_nash_eq, robot_list, task_list, L, kappa)
