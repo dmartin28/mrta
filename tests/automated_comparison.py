@@ -4,6 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 import random
+import copy
 from shared_classes.task import Task
 from shared_classes.robot import Robot
 import phase1.generate_clusters as gc
@@ -15,18 +16,18 @@ from phase2.IP_assignment import IP_assignment
 from phase2.IP_assignment_all_assigned import IP_assignment_all_assigned
 import phase1.phase1_utils as utils
 
-nu = 10 #number of robots
-mu = 5 # number of tasks
+nu = 100 #number of robots
+mu = 50 # number of tasks
 kappa = 2 # number of capabilities
 L = 3 # maximum team size for a single task
-L_t = 4 # Max number of tasks in a cluster
-L_r = 4 # Max number of robots in a cluster
-num_tests = 20
-
+L_t = 7 # Max number of tasks in a cluster
+L_r = 8 # Max number of robots in a cluster
+num_tests = 50
+calc_optimal = nu <= 10 and mu <= 10
 #Define the environment size
-max_x = 50
+max_x = 100
 min_x = 0
-max_y = 50
+max_y = 100
 min_y = 0
 
 ####### Define some specific task types: ############
@@ -99,7 +100,8 @@ task_type_9[0,3] = 350
 robot_type_1 = [1,0]
 robot_type_2 = [0,1]
 
-total_clustered_reward = 0
+total_clustered_reward_nash = 0
+total_clustered_reward_refined = 0
 total_optimal_reward = 0
 
 
@@ -131,46 +133,66 @@ for test in range(num_tests):
         task_list.append(task)
 
     # Generate clusters
-    print(robot_list)
     if len(robot_list) == 0 or len(task_list) == 0:
         print("Error, no robots or tasks to cluster")
         clusters = []
-    else:
-        clusters = gc.nash_eq_clustering(robot_list, task_list, L)
-        clusters = gc.refine_clusters_merge(clusters, robot_list, task_list, L_r, L_t)
+    
+    clusters_nash_eq = gc.nash_eq_clustering(robot_list, task_list, L_r=L)
+        
+    # Perform the phase 2 optimal assignment inside each cluster
+    cluster_assignments_nash = []
+    cluster_assign_rewards_nash = []
+    for i in range(len(clusters_nash_eq)):
+        cluster = clusters_nash_eq[i]
+        assignment, reward = IP_assignment([robot_list[r] for r in cluster[0]], [task_list[t] for t in cluster[1]], L, kappa)
+        cluster_assignments_nash.append(assignment)
+        cluster_assign_rewards_nash.append(reward)
+
+    clustered_reward_nash = sum(cluster_assign_rewards_nash)
+    print(f"Nash Clustered Reward: {clustered_reward_nash}")
+
+    # Create refined clusters
+    clusters_refined = copy.deepcopy(clusters_nash_eq)
+    clusters_refined = gc.refine_clusters_merge(clusters_refined, robot_list, task_list, L_r, L_t)
 
     # Perform the phase 2 optimal assignment inside each cluster
-    cluster_assignments = []
-    cluster_assign_rewards = []
-    for i in range(len(clusters)):
-        cluster = clusters[i]
+    cluster_assignments_refined = []
+    cluster_assign_rewards_refined = []
+    for i in range(len(clusters_refined)):
+        cluster = clusters_refined[i]
         assignment, reward = IP_assignment([robot_list[r] for r in cluster[0]], [task_list[t] for t in cluster[1]], L, kappa)
-        cluster_assignments.append(assignment)
-        cluster_assign_rewards.append(reward)
+        cluster_assignments_refined.append(assignment)
+        cluster_assign_rewards_refined.append(reward)
 
-    clustered_reward = sum(cluster_assign_rewards)
+    clustered_reward_refined = sum(cluster_assign_rewards_refined)
     
     # Calculate optimal assignment
-    optimal_assignment, optimal_reward = IP_assignment(robot_list, task_list, L, kappa)
+    if calc_optimal:
+        optimal_assignment, optimal_reward = IP_assignment(robot_list, task_list, L, kappa)
 
     # Print results for this test
-    print(f"Clustered Reward: {clustered_reward}")
-    print(f"Clustered Assignments:")
-    for i, cluster in enumerate(clusters):
-        print(f"Cluster {i}: Robots {cluster[0]}, Tasks {cluster[1]}")
-        print(f"Assignment: {cluster_assignments[i]}")
-        print(f"Reward: {cluster_assign_rewards[i]}")
-    print(f"Optimal Reward: {optimal_reward}")
+    #print(f"Nash Clustered Reward: {clustered_reward_nash}")
+    print(f"Refined Clustered Reward: {clustered_reward_refined}")
+    if calc_optimal:
+        print(f"Optimal Reward: {optimal_reward}")
+        total_optimal_reward += optimal_reward
 
     # Update totals
-    total_clustered_reward += clustered_reward
-    total_optimal_reward += optimal_reward
+    total_clustered_reward_nash += clustered_reward_nash
+    total_clustered_reward_refined += clustered_reward_refined
 
 # Calculate and print averages
-avg_clustered_reward = total_clustered_reward / num_tests
+avg_clustered_reward_nash = total_clustered_reward_nash / num_tests
+avg_clustered_reward_refined = total_clustered_reward_refined / num_tests
 avg_optimal_reward = total_optimal_reward / num_tests
 
 print("\n--- Final Results ---")
-print(f"Average Clustered Reward: {avg_clustered_reward}")
+print(f"Average Nash Reward: {avg_clustered_reward_nash}")
+print(f"Average Refined Reward: {avg_clustered_reward_refined}")
 print(f"Average Optimal Reward: {avg_optimal_reward}")
-print(f"Percent: {100*avg_clustered_reward/avg_optimal_reward}%")
+if calc_optimal:
+    print(f"Nash Percent of Optimal: {100*avg_clustered_reward_nash/avg_optimal_reward}%")
+    print(f"Refined Percent of Optimal: {100*avg_clustered_reward_refined/avg_optimal_reward}%")
+else:
+    percent_improvement = (avg_clustered_reward_refined - avg_clustered_reward_nash)/avg_clustered_reward_nash
+    print(f"Percent Improvement from Refining: {100*percent_improvement}%")
