@@ -127,77 +127,77 @@ def calculate_upper_bounds(robot_list, task_list, partitions,L):
 
     return upper_bounds
 
-def bounded_partition_search(robots,tasks,partition):
+# def bounded_partition_search(robots,tasks,partition):
     
-    t0_assignment = []
+#     t0_assignment = []
 
-    # Base case: there is only one task
-    if len(tasks) == 1:
-        for robot in robots:          
-            t0_assignment.append(robot.get_id())
-        reward = calculate_net_reward(robots, tasks[0])
-        best_assignment = [t0_assignment]
-        return best_assignment,reward
+#     # Base case: there is only one task
+#     if len(tasks) == 1:
+#         for robot in robots:          
+#             t0_assignment.append(robot.get_id())
+#         reward = calculate_net_reward(robots, tasks[0])
+#         best_assignment = [t0_assignment]
+#         return best_assignment,reward
     
-    else: # Recursive case: there are multiple tasks
-        team_size_0 = partition[0] # team size for the first task
+#     else: # Recursive case: there are multiple tasks
+#         team_size_0 = partition[0] # team size for the first task
 
-        # If no robots assigned to the first task just return assignment of sublists
-        if team_size_0 == 0:
-            t0_assignment = []
-            reward_0 = 0
+#         # If no robots assigned to the first task just return assignment of sublists
+#         if team_size_0 == 0:
+#             t0_assignment = []
+#             reward_0 = 0
             
-            # Create new robot/task lists and sub_partition
-            unused_robots = robots.copy()
-            other_tasks = tasks.copy()
-            other_tasks.pop(0)
-            sub_partition = partition.copy()
-            sub_partition.pop(0)
+#             # Create new robot/task lists and sub_partition
+#             unused_robots = robots.copy()
+#             other_tasks = tasks.copy()
+#             other_tasks.pop(0)
+#             sub_partition = partition.copy()
+#             sub_partition.pop(0)
 
-            # Recursively call partition_search
-            sub_assignment, add_rewards = partition_search(unused_robots,other_tasks,sub_partition)
-            max_reward = reward_0 + add_rewards
-            best_assignment = [t0_assignment] + sub_assignment
-            return best_assignment, max_reward
+#             # Recursively call partition_search
+#             sub_assignment, add_rewards = partition_search(unused_robots,other_tasks,sub_partition)
+#             max_reward = reward_0 + add_rewards
+#             best_assignment = [t0_assignment] + sub_assignment
+#             return best_assignment, max_reward
         
-        else: # One or more robot assigned to first task
+#         else: # One or more robot assigned to first task
 
-            n = len(robots)
-            max_reward = float('-inf')
-            best_assignment = None
+#             n = len(robots)
+#             max_reward = float('-inf')
+#             best_assignment = None
         
-            # for all possible combinations of robots for the first task
-            combos = combinations(range(n), team_size_0)
-            for combo in combos:
+#             # for all possible combinations of robots for the first task
+#             combos = combinations(range(n), team_size_0)
+#             for combo in combos:
                 
-                #Initialize some variables:
-                robots_t0 = [] # Stores robot indices in list
-                t0_assignment = [] # Stores robot ids
-                unused_robots = robots.copy()
-                other_tasks = tasks.copy()
-                other_tasks.pop(0)
-                sub_partition = partition.copy()
-                sub_partition.pop(0)
+#                 #Initialize some variables:
+#                 robots_t0 = [] # Stores robot indices in list
+#                 t0_assignment = [] # Stores robot ids
+#                 unused_robots = robots.copy()
+#                 other_tasks = tasks.copy()
+#                 other_tasks.pop(0)
+#                 sub_partition = partition.copy()
+#                 sub_partition.pop(0)
     
-                # Create a list of indices to remove, sorted in descending order
-                indices_to_remove = sorted(combo, reverse=True)
+#                 # Create a list of indices to remove, sorted in descending order
+#                 indices_to_remove = sorted(combo, reverse=True)
     
-                # Remove robots from unused_robots and add them to robots_t0
-                for robot_idx in indices_to_remove:
-                    robot = unused_robots.pop(robot_idx)
-                    robots_t0.append(robot)
-                    t0_assignment.append(robot.get_id())
+#                 # Remove robots from unused_robots and add them to robots_t0
+#                 for robot_idx in indices_to_remove:
+#                     robot = unused_robots.pop(robot_idx)
+#                     robots_t0.append(robot)
+#                     t0_assignment.append(robot.get_id())
     
-                reward_0 = calculate_net_reward(robots_t0, tasks[0])
+#                 reward_0 = calculate_net_reward(robots_t0, tasks[0])
                 
-                sub_assignment, add_rewards = partition_search(unused_robots,other_tasks,sub_partition)
-                reward = reward_0 + add_rewards
+#                 sub_assignment, add_rewards = partition_search(unused_robots,other_tasks,sub_partition)
+#                 reward = reward_0 + add_rewards
             
-                if reward > max_reward:
-                    max_reward = reward
-                    best_assignment = [t0_assignment] + sub_assignment
+#                 if reward > max_reward:
+#                     max_reward = reward
+#                     best_assignment = [t0_assignment] + sub_assignment
                 
-            return best_assignment, max_reward
+#             return best_assignment, max_reward
 
 def partition_search(robots,tasks,partition):
     
@@ -288,6 +288,9 @@ def partition_search(robots,tasks,partition):
         return best_assignment, max_reward
             
 def partition_search_dummyTask(robots,tasks,partition):
+    
+    # This function is a modified version of partition_search that allows for some
+    # robots to be assigned to a dummy task (unassigned robots)
     
     # Robot IDs assigned to the first task in tasks
     # Note this stores the global robot IDs, not indices

@@ -16,6 +16,7 @@ from phase2.IP_assignment import IP_assignment
 from phase2.IP_assignment_all_assigned import IP_assignment_all_assigned
 import visuals.plot_clusters as visuals
 import phase1.phase1_utils as utils
+from phase1.convert_assignment_to_clusters import convert_assignment_to_clusters
 
 # random.seed(42)
 
