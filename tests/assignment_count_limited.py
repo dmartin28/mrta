@@ -1,55 +1,54 @@
+
+"""
+This script calculates the total number of ways to assign n robots to m tasks
+Subject to the following constraints:
+1. Each task can have at most L robots assigned to it.
+2. Each robot can only be assigned to one task.
+
+Note: We do not require all robots to be assigned to tasks.
+Many or even all robots might be unassigned.
+The first number in each partition represents the number of unassigned robots.
+The remaining numbers represent the number of robots assigned to each task.
+"""
+
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import math
 
-def binomial_coefficient(n, k):
-    return math.comb(n, k)
+# My Code:
+import phase2.phase2_utils as utils
 
-def assignment_count(n, m, L):
-    memo = {}
+# Parameters:
+n = 5  # number of robots
+m = 5  # number of tasks
+L = 3   # max number of robots per task
+
+# Generate all partitions of n into m parts with each part <= L
+partitions = utils.generate_partitions(n, m, L)
+
+total_assignments = 0
+
+# For each partition calculate the number of assignments using the multinomial coefficient
+for partition in partitions:
+    # Calculate the number of assignments for this partition
+    # This is done using the multinomial coefficient
+    # n! / (k1! * k2! * ... * km!)
+    # where n is the total number of robots and ki is the number of robots in each partition
+    partition_sum = sum(partition)
+    numerator = math.factorial(partition_sum)
+    denominator = 1
+    for k in partition:
+        denominator *= math.factorial(k)
     
-    def f(n, m, L):
-        if m == 0:
-            return 1 if n == 0 else 0
-        if n < 0:
-            return 0
-        
-        if (n, m, L) in memo:
-            return memo[(n, m, L)]
-        
-        total = 0
-        if m == 1:
-            total = 1
-        else:
-            for k in range(min(L, n) + 1):
-                total += binomial_coefficient(n, k) * f(n-k, m-1, L)
-        
-        memo[(n, m, L)] = total
-        return total
+    # Calculate the number of assignments for this partition
+    num_assignments = numerator / denominator
     
-    return f(n, m+1, L)
+    # Add number of assignments in this partition to the total
+    total_assignments += num_assignments
+    # Print the number of assignments for this partition
+    print(f"Partition: {partition}, Number of Assignments: {num_assignments}")
 
-# Fixed L value
-L = 3
-
-# Create a 2D list to store results
-results = [[0 for _ in range(10)] for _ in range(8)]
-
-# Calculate results for all combinations of n and m
-for m in range(1, 9):
-    for n in range(1, 11):
-        results[m-1][n-1] = assignment_count(n, m, L)
-
-# Print the results in a table format
-print(f"Results for L = {L}:")
-print("\nn\\m", end="")
-for m in range(1, 9):
-    print(f"{m:10d}", end="")
-print("\n" + "-" * 90)
-
-for n in range(1, 11):
-    print(f"{n:2d} |", end="")
-    for m in range(1, 9):
-        print(f"{results[m-1][n-1]:10d}", end="")
-    print()
-
-print("\nNote: m represents the number of tasks (excluding the dummy task for unassigned robots)")
-print("      n represents the number of robots")
+# Print the total number of assignments
+print(f"Total Number of Assignments for n={n}, m={m}: {int(total_assignments)}")

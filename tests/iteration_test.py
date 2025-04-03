@@ -25,8 +25,8 @@ from cluster_assignment_rand import cluster_assignment_rand
 import copy
 
 """HyperParameters"""
-nu = 9 #number of robots # was 10
-mu = 5 # number of tasks  # was 5
+nu = 1000 #number of robots # was 10
+mu = 300 # number of tasks  # was 5
 kappa = 2 # number of capabilities
 L = 3 # maximum team size for a single task
 L_t = 7 # Max number of tasks in a cluster
@@ -34,9 +34,9 @@ L_r = 7 # Max number of robots in a cluster
 num_iterations = 100 # number of iterations to run
 
 # Define the environment size
-max_x = 50
+max_x = 100
 min_x = 0
-max_y = 50
+max_y = 100
 min_y = 0
 
 """ Define some specific task types: """
@@ -133,77 +133,7 @@ for i in range(mu):
     task = Task(i, task_type, task_x_locations[i], task_y_locations[i])
     task_list.append(task)
 
-# # Initialize the rewards and assignment vecctors
-# iteration_rewards = []
-# iteration_assignments = []
-
-# """ 1. Start with all robots and tasks in their own individual assignment grouping """
-# # Note: Assignment groupings have same shape as clusters [List of robots, List of tasks] (2D array)
-# assignment_groupings = []
-# for robot in robot_list:
-#     assignment_groupings.append([[robot.id], []])
-# for task in task_list:
-#     assignment_groupings.append([[], [task.id]])
-
-# for iteration in range(num_iterations):
-#     print(f"\n--- Iteration {iteration + 1} ---")
-    
-#     """ 2. Merge assignment groupings to create clusters """
-#     #clusters = gc.refine_clusters_merge(assignment_groupings,robot_list, task_list, L_r, L_t)
-#     clusters = gc.refine_clusters_random_merge(assignment_groupings, L_r, L_t)
-
-#     """3. Perform optimal assignment within each cluster"""
-#     cluster_assignments = []
-#     cluster_assign_rewards = []
-#     for cluster in clusters:
-        
-#         # Perform optimal assignment
-#         assignment, reward = IP_assignment([robot_list[r] for r in cluster[0]], [task_list[t] for t in cluster[1]], L, kappa)
-        
-#         # Store cluster assignments and rewards
-#         cluster_assignments.append(assignment)
-#         cluster_assign_rewards.append(reward)
-    
-#     """ Convert the cluster assignments to a single assignment """
-
-#     """ Convert the cluster assignments to a single assignment """
-#     # initialize the assignment list
-#     num_tasks = mu # total number of tasks
-#     assignment = [[] for _ in range(num_tasks + 1)]  # Stores the global assignment
-
-#     for cluster_idx, cluster in enumerate(clusters):
-#         cluster_assignment = cluster_assignments[cluster_idx]
-        
-#         # Add unassigned robots to the assignment
-#         assignment[0].extend(cluster_assignment[0])
-        
-#         # Add assigned robots to their respective tasks
-#         for task_idx, task_id in enumerate(cluster[1]):
-#             if task_idx + 1 < len(cluster_assignment):  # Check if the task has an assignment
-#                 assignment[task_id + 1].extend(cluster_assignment[task_idx + 1])
-
-#     """ 4. Create assignment groupings based on the current assignment """
-#     assignment_groupings = convert_assignment_to_clusters(assignment)
-
-#     # # Print cluster assignments, assignment, and assignment_groupings:
-#     # for cluster_assignment_idx in range(len(cluster_assignments)):
-#     #     print(f"Cluster {cluster_assignment_idx} Tasks: {clusters[cluster_assignment_idx][1]}")
-#     #     print(f"Cluster {cluster_assignment_idx} Robots: {clusters[cluster_assignment_idx][0]}")
-#     #     print(f"Cluster {cluster_assignment_idx} Assignments: {cluster_assignments[cluster_assignment_idx]}")
-#     #     print("\n")    
-#     # print(f"Assignment: {assignment}")
-#     # print(f"Assignment Groupings: {assignment_groupings}")
-
-#     # Output the results of the current iteration:
-#     total_reward = sum(cluster_assign_rewards)
-#     print(f"Total Reward: {total_reward}")
-#     print(f"Assignment: {assignment}")
-
-#     # Store the results of the current iteration
-#     iteration_rewards.append(total_reward)
-#     iteration_assignments.append(copy.deepcopy(assignment))
-
-total_reward, iteration_assignments, iteration_rewards = cluster_assignment_rand(robot_list, task_list, L_r, L_t, kappa, num_iterations)
+total_reward, iteration_assignments, iteration_rewards = cluster_assignment_rand(robot_list, task_list, L_r, L_t, kappa, num_iterations, printout=True)
 
 # Print final results of all iterations
 print("\n--- Final Results ---")
@@ -214,7 +144,8 @@ for i in range(len(iteration_rewards)):
     print(f"Iteration {i + 1}: Total Reward: {iteration_rewards[i]}")
 
 # Calculate optimal assignment
-optimal_assignment, optimal_reward = IP_assignment(robot_list, task_list, L, kappa)
-print(f"\nOptimal Reward: {optimal_reward}")
-print(f"Optimal Assignment: {optimal_assignment}")
+if nu < 10 and mu < 6:
+    optimal_assignment, optimal_reward = IP_assignment(robot_list, task_list, L, kappa)
+    print(f"\nOptimal Reward: {optimal_reward}")
+    print(f"Optimal Assignment: {optimal_assignment}")
 print(f"Iterative Assignment: {iteration_assignments[-1]}")
