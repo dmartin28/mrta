@@ -15,8 +15,8 @@ import pickle
 from cluster_assignment_rand import cluster_assignment_rand
 
 """HyperParameters"""
-nu = 40 #number of robots # was 10
-mu = 40 # number of tasks  # was 5
+nu = 30 #number of robots
+mu = 30 # number of tasks
 kappa = 2 # number of capabilities
 L = 3 # maximum team size for a single task
 
@@ -28,25 +28,13 @@ min_y = 0
 
 "Test Parameters"
 cluster_sizes = [1, 2, 3, 4, 5, 6, 7]
-num_tests = 10
-
-# Define iterations for each cluster size (more iterations for smaller clusters)
-iterations_by_size = {
-    7: 150,    # 100 iterations for cluster size 7
-    6: 150,    # 200 iterations for cluster size 6
-    5: 250,    # 300 iterations for cluster size 5
-    4: 250,    # 400 iterations for cluster size 4
-    3: 250,    # 500 iterations for cluster size 3
-    2: 250,    # 600 iterations for cluster size 2
-    1: 250     # 700 iterations for cluster size 1
-}
-
-# Maximum number of iterations across all cluster sizes (for plotting)
-max_iterations = max(iterations_by_size.values())
+num_tests = 50
+test_time = 5  # Run each cluster size for 5 seconds
 
 # Initialize dictionaries to store results and timing for each cluster size
 reward_results = {size: [] for size in cluster_sizes}
 time_results = {size: [] for size in cluster_sizes}
+iterations_completed = {size: [] for size in cluster_sizes}
 
 for test in range(num_tests):
     print(f"Test: {test+1}")
@@ -138,12 +126,12 @@ for test in range(num_tests):
         task_list.append(task)
 
     for cluster_size in cluster_sizes:
-        # Get the number of iterations for this cluster size
-        num_iterations_for_size = iterations_by_size[cluster_size]
+        # Set a large number of iterations as an upper limit
+        max_iterations = 1000
         
-        # Perform random iterative assignment
+        # Perform random iterative assignment with time limit
         total_reward, iteration_assignments, iteration_rewards, iteration_times = cluster_assignment_rand(
-            robot_list, task_list, cluster_size, cluster_size, kappa, num_iterations_for_size)
+            robot_list, task_list, cluster_size, cluster_size, kappa, max_iterations, time_limit=test_time)
         
         # Calculate total execution time
         total_time = sum(iteration_times)
@@ -151,12 +139,45 @@ for test in range(num_tests):
         # Store the iteration rewards and times for this test and cluster size
         reward_results[cluster_size].append(iteration_rewards)
         time_results[cluster_size].append(iteration_times)
+        iterations_completed[cluster_size].append(len(iteration_rewards))
         
-        print(f"Cluster size {cluster_size}: {total_time:.2f} seconds total, {sum(iteration_times)/len(iteration_times):.6f} seconds per iteration")
+        print(f"Cluster size {cluster_size}: {total_time:.2f} seconds total, {len(iteration_rewards)} iterations, {total_time/len(iteration_rewards):.6f} seconds per iteration")
 
 # Calculate average iteration rewards and times for each cluster size across all tests
-avg_results = {size: np.mean(np.array(rewards), axis=0) for size, rewards in reward_results.items()}
-avg_times = {size: np.mean(np.array(times), axis=0) for size, times in time_results.items()}
+avg_results = {size: [] for size in cluster_sizes}
+avg_times = {size: [] for size in cluster_sizes}
+
+# Find the maximum number of iterations completed for any cluster size
+max_iterations_across_all = max([max([len(rewards) for rewards in reward_results[size]]) for size in cluster_sizes])
+
+# Process the results to create arrays of equal length for plotting
+for size in cluster_sizes:
+    # Find the maximum number of iterations for this cluster size across all tests
+    max_iter_for_size = max([len(rewards) for rewards in reward_results[size]])
+    
+    # For each test, pad the rewards and times arrays to the max_iter_for_size
+    padded_rewards = []
+    padded_times = []
+    
+    for test_idx in range(num_tests):
+        rewards = reward_results[size][test_idx]
+        times = time_results[size][test_idx]
+        
+        # Pad rewards with the last value
+        if len(rewards) < max_iter_for_size:
+            padded_rewards.append(np.pad(rewards, (0, max_iter_for_size - len(rewards)), 'edge'))
+        else:
+            padded_rewards.append(rewards)
+            
+        # Pad times with zeros (we'll only use actual times for cumulative time calculation)
+        if len(times) < max_iter_for_size:
+            padded_times.append(np.pad(times, (0, max_iter_for_size - len(times)), 'constant'))
+        else:
+            padded_times.append(times)
+    
+    # Calculate average rewards and times across all tests
+    avg_results[size] = np.mean(padded_rewards, axis=0)
+    avg_times[size] = np.mean(padded_times, axis=0)
 
 # After all tests are completed, calculate and print average time per iteration for each cluster size
 print("\nAverage time per iteration across all tests:")
@@ -167,8 +188,9 @@ for cluster_size in cluster_sizes:
         all_iteration_times.extend(test_times)
     
     avg_time_per_iteration = sum(all_iteration_times) / len(all_iteration_times)
+    avg_iterations = np.mean(iterations_completed[cluster_size])
     
-    print(f"Cluster size {cluster_size}: {avg_time_per_iteration:.6f} seconds per iteration")
+    print(f"Cluster size {cluster_size}: {avg_time_per_iteration:.6f} seconds per iteration, avg {avg_iterations:.1f} iterations completed")
 
 # Save results and avg_results to files
 with open('random_cluster_results.pkl', 'wb') as f:
@@ -195,28 +217,55 @@ for size, avg_rewards in avg_results.items():
 
 plt.xlabel('Iteration')
 plt.ylabel('Average Reward')
-plt.title(f'Average Reward vs. Iteration for Different Cluster Sizes\n(Averaged over {num_tests} tests with {nu} robots and {mu} tasks)')
+plt.title(f'Average Reward vs. Iteration for Different Cluster Sizes\n(Averaged over {num_tests} tests with {nu} robots and {mu} tasks, {test_time}s time limit)')
 plt.legend()
 plt.grid(True)
 plt.savefig('random_cluster_results_plot.png')
 plt.show()
 
-# Plot 2: Reward vs Elapsed Time
+# Plot 2: Reward vs Elapsed Time (limited to test_time)
 plt.figure(figsize=(12, 8))
 
-for size, avg_rewards in avg_results.items():
-    # Get the corresponding time data
-    times = avg_times[size]
+# Create a common time grid for all cluster sizes from 0 to test_time
+common_time_grid = np.linspace(0, test_time, 100)
+
+for size in cluster_sizes:
+    # For each cluster size, we need to process each test separately
+    all_interpolated_rewards = []
     
-    # Calculate cumulative times
-    cumulative_times = np.cumsum(times)
+    for test_idx in range(num_tests):
+        rewards = reward_results[size][test_idx]
+        times = time_results[size][test_idx]
+        
+        # Calculate cumulative times
+        cumulative_times = np.cumsum(times)
+        
+        # Add a point at (0,0) for the start
+        cumulative_times = np.insert(cumulative_times, 0, 0)
+        rewards_with_zero = np.insert(rewards, 0, 0)
+        
+        # Use numpy's interp function for linear interpolation
+        # This will limit the interpolation to the range of cumulative_times
+        # For times beyond the last cumulative time, use the last reward value
+        interp_rewards = np.interp(
+            common_time_grid, 
+            cumulative_times, 
+            rewards_with_zero,
+            right=rewards_with_zero[-1]  # Use the last reward for extrapolation
+        )
+        
+        all_interpolated_rewards.append(interp_rewards)
     
-    # Plot rewards vs elapsed time
-    plt.plot(cumulative_times, avg_rewards, label=f'Max Robots in Cluster: {size}')
+    # Average the interpolated rewards across all tests
+    avg_interpolated_rewards = np.mean(all_interpolated_rewards, axis=0)
+    
+    # Plot the averaged result
+    plt.plot(common_time_grid, avg_interpolated_rewards, label=f'Max Robots in Cluster: {size}')
 
 plt.xlabel('Elapsed Time (seconds)')
 plt.ylabel('Average Reward')
-plt.title(f'Average Reward vs. Elapsed Time for Different Cluster Sizes\n(Averaged over {num_tests} tests with {nu} robots and {mu} tasks)')
+plt.xlim(0, test_time)  # Limit x-axis to range from 0 to test_time
+plt.title(f'Average Reward vs. Elapsed Time for Different Cluster Sizes\n(Averaged over {num_tests} tests with {nu} robots and {mu} tasks, {test_time}s time limit)')
 plt.legend()
 plt.grid(True)
 plt.savefig('random_cluster_time_plot.png')

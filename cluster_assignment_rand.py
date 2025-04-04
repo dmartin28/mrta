@@ -1,9 +1,13 @@
 """This function generates an assignment by creating random clusters of robots and tasks
 Inputs:
-        num_iterations = number of clustering iterations to perform
+        robot_list = list of robot objects
+        task_list = list of task objects
         L_r = maximum number of robots in a cluster
         L_t = maximum number of tasks in a cluster
         kappa = number of different robot capabilities
+        num_iterations = maximum number of clustering iterations to perform
+        time_limit = maximum execution time in seconds (optional)
+        printout = whether to print progress (optional)
         
 The Algorithm is as follows:
 1. Start with all robots and tasks in their own individual assignment grouping
@@ -27,20 +31,24 @@ import copy
 import time
 
 
-def cluster_assignment_rand(robot_list, task_list, L_r, L_t, kappa, num_iterations, printout=False):
+def cluster_assignment_rand(robot_list, task_list, L_r, L_t, kappa, num_iterations, time_limit=None, printout=False):
     # Initialize the rewards, assignment vectors, and time tracking
     iteration_rewards = []
     iteration_assignments = []
-    iteration_times = []  # New list to track time per iteration
-
+    iteration_times = []  # List to track time per iteration
+    
+    total_time_elapsed = 0  # Track total time elapsed
+    
     # Create empty assignment_groupings list
     assignment_groupings = []
 
-    #print(f"num_iterations: {num_iterations}")
     for iteration in range(num_iterations):
-        # Initialize timing variables
-        total_iteration_time = 0
-        
+        # Check if we've exceeded the time limit
+        if time_limit is not None and total_time_elapsed >= time_limit:
+            if printout:
+                print(f"Time limit of {time_limit} seconds reached after {iteration} iterations.")
+            break
+            
         """ 1. Start with all robots and tasks in their own individual assignment grouping """
         # Note: Assignment groupings have same shape as clusters [List of robots, List of tasks] (2D array)
         if iteration == 0:
@@ -109,5 +117,14 @@ def cluster_assignment_rand(robot_list, task_list, L_r, L_t, kappa, num_iteratio
         end_time = time.time()
         iteration_time = end_time - start_time
         iteration_times.append(iteration_time)
+        
+        # Update total time elapsed
+        total_time_elapsed += iteration_time
+        
+        # Check if we're about to exceed the time limit
+        if time_limit is not None and total_time_elapsed >= time_limit:
+            if printout:
+                print(f"Time limit of {time_limit} seconds reached after {iteration + 1} iterations.")
+            break
         
     return total_reward, iteration_assignments, iteration_rewards, iteration_times
