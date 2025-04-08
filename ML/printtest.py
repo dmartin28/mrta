@@ -1,8 +1,14 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import torch
 import torch.nn as nn
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 import random
+
+from ML.synergy_model import SynergyModel
 
 # Load the validation data
 val_data = pd.read_csv('data/val/mrta_val.csv')
@@ -19,22 +25,8 @@ X_val = scaler.fit_transform(X_val)
 X_val = torch.FloatTensor(X_val)
 y_val = torch.FloatTensor(y_val).reshape(-1, 1)
 
-# Define the model architecture (make sure it matches the saved model)
-class LinearNN(nn.Module):
-    def __init__(self, input_size):
-        super(LinearNN, self).__init__()
-        self.linear1 = nn.Linear(input_size, input_size)
-        self.linear2 = nn.Linear(input_size, input_size)
-        self.linear3 = nn.Linear(input_size, 1)
-
-    def forward(self, x):
-        x = torch.relu(self.linear1(x))
-        x = torch.relu(self.linear2(x))
-        x = self.linear3(x)
-        return x
-
 # Load the saved model
-model = LinearNN(X_val.shape[1])
+model = SynergyModel(X_val.shape[1])
 model.load_state_dict(torch.load('best_linear_nn_model.pth'))
 model.eval()
 

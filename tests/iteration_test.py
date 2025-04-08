@@ -22,6 +22,7 @@ import phase1.generate_clusters as gc
 from phase2.IP_assignment import IP_assignment
 from phase1.convert_assignment_to_clusters import convert_assignment_to_clusters
 from cluster_assignment_rand import cluster_assignment_rand
+from cluster_assignment_nn import cluster_assignment_nn
 import copy
 
 """HyperParameters"""
@@ -133,7 +134,8 @@ for i in range(mu):
     task = Task(i, task_type, task_x_locations[i], task_y_locations[i])
     task_list.append(task)
 
-total_reward, iteration_assignments, iteration_rewards = cluster_assignment_rand(robot_list, task_list, L_r, L_t, kappa, num_iterations, printout=True)
+#total_reward, iteration_assignments, iteration_rewards = cluster_assignment_rand(robot_list, task_list, L_r, L_t, kappa, num_iterations, printout=True)
+total_reward, iteration_assignments, iteration_rewards = cluster_assignment_nn(robot_list, task_list, L_r, L_t, kappa, num_iterations, printout=True)
 
 # Print final results of all iterations
 print("\n--- Final Results ---")

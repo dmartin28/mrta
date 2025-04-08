@@ -10,7 +10,8 @@ import random
 import torch
 import numpy as np
 
-def refine_clusters_random_merge(initial_clusters, L_r, L_t, model, epsilon=0.1):
+def refine_clusters_nn_merge(initial_clusters,robot_list, task_list, L_r, L_t, kappa, L, model, epsilon):
+    
     clusters = initial_clusters.copy()
     
     # Create list of clusters that can still increase in size without exceeding L_r or L_t
@@ -47,10 +48,10 @@ def refine_clusters_random_merge(initial_clusters, L_r, L_t, model, epsilon=0.1)
                 for candidate in merge_candidates:
                     # Create NN input vector for each pair of possible merges
                     
-        ############# Need to build this function to create the input vector
-                    input_vector = create_input_vector(clusters[cluster_index], clusters[candidate])
+                    # Need to build this function to create the input vector
+                    input_vector = create_input_vector(clusters[cluster_index], clusters[candidate], kappa,L,L_r,L_t)
                     
-        ############# Need to figure out how to load the model
+                    # Need to figure out how to load the model
                     # Predicted reward = model(input_vector)
                     with torch.no_grad():
                         predicted_reward = model(torch.FloatTensor(input_vector)).item()
@@ -82,65 +83,46 @@ def refine_clusters_random_merge(initial_clusters, L_r, L_t, model, epsilon=0.1)
     
     return clusters
 
-def create_input_vector(cluster1, cluster2):
-    # Implement this function to create the input vector for the neural network
-    # based on the two clusters that are candidates for merging
-    pass
-
-
-# import sys
-# import os
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# from shared_classes.robot import Robot
-# from shared_classes.task import Task
-# import phase1.phase1_utils as utils
-# import random
-
-# def refine_clusters_random_merge(initial_clusters, L_r, L_t):
-#     clusters = initial_clusters.copy()
+def create_input_vector(cluster1, cluster2, robot_list, task_list, kappa,L,L_r,L_t):
     
-#     # create list of clusters that can still increase in size without exceeding L_r or L_t
-#     # incomplete_clusters = []
+    robots_1 = cluster1[0]
+    tasks_1 = cluster1[1]
+    robots_2 = cluster2[0]
+    tasks_2 = cluster2[1]
     
-#     # create list of clsters that are already at max size
-#     # complete_clusters = []
+    # Define the size of robot and task information
+    robot_info_size = 2 + kappa  # x, y, and kappa capability values
+    task_info_size = 2 + (L+1)**kappa  # x, y, and flattened reward matrix
 
-#     # while there are some incomplete cluster
-#         # randomly choose one of the incomplete clusters
-#         # find all possible merge pairs for this cluster that do not exceed L_r or L_t
+    # Concatenate all of cluster 1 info into a vector
+    cluster_1_vector = []
+    for robot_idx in robots_1:
+        robot = robot_list[robot_idx]
+        cluster_1_vector.extend([robot.x, robot.y] + robot.capabilities.tolist())
+    # Pad with zeros if there are fewer than L_r robots
+    cluster_1_vector.extend([0] * (L_r - len(robots_1)) * robot_info_size)
 
-#         # if there are no possible merge pairs, move this cluster to the complete_clusters list
-#         # Else:
-#             # epsilon  percent of the time choose a random merge pair
-#             # 1-epsilon percent of the time, choose merge pair with the highest predicted reward
-#                 # create NN input vector for each pair of possible merges
-#                 # predicted reward = model(input_vector)
-#                 # create a softmax distribution over the predicted rewards
-#                 # choose a merge pair based on the softmax distribution
-#         # 
+    for task_idx in tasks_1:
+        task = task_list[task_idx]
+        cluster_1_vector.extend([task.x, task.y] + task.reward_matrix.flatten().tolist())
+    # Pad with zeros if there are fewer than L_t tasks
+    cluster_1_vector.extend([0] * (L_t - len(tasks_1)) * task_info_size)
 
-#     # Old code commented out
-#     # while True:
-#     #     # Create a list of all possible merge pairs
-#     #     merge_candidates = []
-#     #     for i in range(len(clusters)):
-#     #         for j in range(i+1, len(clusters)):
-#     #             if (len(clusters[i][0]) + len(clusters[j][0]) <= L_r and 
-#     #                 len(clusters[i][1]) + len(clusters[j][1]) <= L_t):
-#     #                 merge_candidates.append((i, j))
-        
-#     #     # If no more merges are possible, break the loop
-#     #     if not merge_candidates:
-#     #         break
-        
-#     #     # Randomly select a merge pair
-#     #     merge_indices = random.choice(merge_candidates)
-        
-#     #     # Merge the selected clusters
-#     #     i, j = merge_indices
-#     #     clusters[i][0] += clusters[j][0]
-#     #     clusters[i][1] += clusters[j][1]
-#     #     clusters.pop(j)
-    
-#     return clusters
+    # Concatenate all of cluster 2 info into a vector
+    cluster_2_vector = []
+    for robot_idx in robots_2:
+        robot = robot_list[robot_idx]
+        cluster_2_vector.extend([robot.x, robot.y] + robot.capabilities.tolist())
+    # Pad with zeros if there are fewer than L_r robots
+    cluster_2_vector.extend([0] * (L_r - len(robots_2)) * robot_info_size)
+
+    for task in tasks_2:
+        task = task_list[task_idx]
+        cluster_2_vector.extend([task.x, task.y] + task.reward_matrix.flatten().tolist())
+    # Pad with zeros if there are fewer than L_t tasks
+    cluster_2_vector.extend([0] * (L_t - len(tasks_2)) * task_info_size)
+
+    # Concatenate everything into one vector (This is the input to the NN)
+    # Will have size 264 when L_t = 6, L_r = 6, kappa = 2
+    nn_input = np.array(cluster_1_vector + cluster_2_vector, dtype=np.float32)
+    return nn_input

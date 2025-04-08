@@ -23,8 +23,12 @@ import random
 import phase1.generate_clusters as gc
 from phase2.IP_assignment import IP_assignment
 from phase1.convert_assignment_to_clusters import convert_assignment_to_clusters
+from phase1.generate_clusters_nn import refine_clusters_nn_merge
+from ML.synergy_model import SynergyModel
 import copy
 import time
+import torch
+import torch.nn as nn
 
 
 def cluster_assignment_nn(robot_list, task_list, L_r, L_t, kappa, num_iterations, printout=False):
@@ -35,6 +39,16 @@ def cluster_assignment_nn(robot_list, task_list, L_r, L_t, kappa, num_iterations
 
     # Create empty assignment_groupings list
     assignment_groupings = []
+
+    # Load model
+    # Load the saved model
+    # Will have size 264 when L_t = 6, L_r = 6, kappa = 2
+    model = SynergyModel(264)
+    model.load_state_dict(torch.load('best_linear_nn_model.pth'))
+    model.eval()
+
+    # L is max robots per task
+    L = len(task_list[0].get_reward_matrix())-1
 
     #print(f"num_iterations: {num_iterations}")
     for iteration in range(num_iterations):
@@ -55,7 +69,7 @@ def cluster_assignment_nn(robot_list, task_list, L_r, L_t, kappa, num_iterations
         
         """ 2. Merge assignment groupings to create clusters """
         # Merge assignment groupings to create clusters - NOT timed
-        clusters = gc.refine_clusters_random_merge(assignment_groupings, L_r, L_t)
+        clusters = refine_clusters_nn_merge(assignment_groupings, robot_list, task_list, L_r, L_t,kappa,L,model, epsilon=0.1)
 
         # Start timing after cluster creation
         start_time = time.time()
@@ -65,11 +79,7 @@ def cluster_assignment_nn(robot_list, task_list, L_r, L_t, kappa, num_iterations
         cluster_assign_rewards = []
         for cluster in clusters:
             
-            # Perform optimal assignment
-            
-            # L is max robots per task
-            L = len(task_list[0].get_reward_matrix())-1
-            
+            # Perform optimal assignment 
             assignment, reward = IP_assignment([robot_list[r] for r in cluster[0]], [task_list[t] for t in cluster[1]], L, kappa)
             
             # Store cluster assignments and rewards

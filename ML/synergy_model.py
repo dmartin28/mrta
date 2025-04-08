@@ -1,101 +1,17 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import pandas as pd
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
 
-# Load the data
-train_data = pd.read_csv('data/train/mrta_train.csv')
-val_data = pd.read_csv('data/val/mrta_val.csv')
-
-# Separate features and target
-X_train = train_data.iloc[:, :-1].values
-y_train = train_data.iloc[:, -1].values
-X_val = val_data.iloc[:, :-1].values
-y_val = val_data.iloc[:, -1].values
-
-# Standardize the features
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_val = scaler.transform(X_val)
-
-# Convert to PyTorch tensors
-X_train = torch.FloatTensor(X_train)
-y_train = torch.FloatTensor(y_train).reshape(-1, 1)
-X_val = torch.FloatTensor(X_val)
-y_val = torch.FloatTensor(y_val).reshape(-1, 1)
-
-class LinearNN(nn.Module):
+# Define the model architecture (make sure it matches the saved model)
+class SynergyModel(nn.Module):
     def __init__(self, input_size):
-        super(LinearNN, self).__init__()
-
-        # This model had val loss of 1970, 1959
-        # self.linear1 = nn.Linear(input_size, input_size // 2)  # (264, 132)
-        # self.linear2 = nn.Linear(input_size // 2, input_size // 4)  # (132, 66)
-        # self.linear3 = nn.Linear(input_size // 4, 1)  # (66, 1)
-
-        # This model had val loss of 1910,1880
-        self.linear1 = nn.Linear(input_size, input_size)  # (264, 264)
-        self.linear2 = nn.Linear(input_size, input_size)  # (264, 264)
-        self.linear3 = nn.Linear(input_size, 1)  # (264, 1)
+        super(SynergyModel, self).__init__()
+        self.linear1 = nn.Linear(input_size, input_size)
+        self.linear2 = nn.Linear(input_size, input_size)
+        self.linear3 = nn.Linear(input_size, 1)
 
     def forward(self, x):
         x = torch.relu(self.linear1(x))
         x = torch.relu(self.linear2(x))
-        x = self.linear3(x)  # No ReLU on the final layer
+        x = self.linear3(x)
         return x
-
-# Instantiate the model
-model = LinearNN(X_train.shape[1])
-
-# Define loss function and optimizer
-criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-# Training loop
-num_epochs = 15
-batch_size = 32
-best_val_loss = float('inf')
-best_model_path = 'best_linear_nn_model.pth'
-
-for epoch in range(num_epochs):
-    model.train()  # Set the model to training mode
-    total_train_loss = 0
-    
-    for i in range(0, X_train.shape[0], batch_size):
-        batch_X = X_train[i:i+batch_size]
-        batch_y = y_train[i:i+batch_size]
-        
-        # Forward pass
-        outputs = model(batch_X)
-        loss = criterion(outputs, batch_y)
-        
-        # Backward pass and optimize
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        
-        total_train_loss += loss.item()
-    
-    # Calculate average training loss for this epoch
-    avg_train_loss = total_train_loss / (X_train.shape[0] // batch_size)
-    
-    # Evaluate on validation set
-    model.eval()  # Set the model to evaluation mode
-    with torch.no_grad():
-        val_outputs = model(X_val)
-        val_loss = criterion(val_outputs, y_val)
-    
-    # Print progress
-    print(f'Epoch [{epoch+1}/{num_epochs}], '
-          f'Train Loss: {avg_train_loss:.4f}, '
-          f'Validation Loss: {val_loss.item():.4f}')
-    
-    # Save the model if validation loss improves
-    if val_loss < best_val_loss:
-        best_val_loss = val_loss
-        torch.save(model.state_dict(), best_model_path)
-        print(f"Model saved with validation loss: {best_val_loss:.4f}")
-
-print(f"Training complete. Best model saved as '{best_model_path}' with validation loss: {best_val_loss:.4f}")
