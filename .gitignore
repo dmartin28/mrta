@@ -95,3 +95,4 @@ vendor/bundle
 *.pkl
 *.png
 *.pth
+*.Identifier
