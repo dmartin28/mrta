@@ -31,21 +31,20 @@ import torch
 import torch.nn as nn
 
 
-def cluster_assignment_nn(robot_list, task_list, L_r, L_t, kappa, num_iterations, printout=False):
+def cluster_assignment_nn(model, robot_list, task_list, L_r, L_t, kappa, num_iterations, epsilon=0.1, printout=False):
     # Initialize the rewards, assignment vectors, and time tracking
     iteration_rewards = []
     iteration_assignments = []
     iteration_times = []  # New list to track time per iteration
 
     # Create empty assignment_groupings list
-    assignment_groupings = []
-
-    # Load model
-    # Load the saved model
-    # Will have size 264 when L_t = 6, L_r = 6, kappa = 2
-    model = SynergyModel(264)
-    model.load_state_dict(torch.load('best_linear_nn_model.pth'))
-    model.eval()
+    assignment_groupings = []# Load model
+    
+    # # Load the saved model
+    # # Will have size 264 when L_t = 6, L_r = 6, kappa = 2
+    # model = SynergyModel(264)
+    # model.load_state_dict(torch.load('best_linear_nn_model.pth'))
+    # model.eval()
 
     # L is max robots per task
     L = len(task_list[0].get_reward_matrix())-1
@@ -69,7 +68,7 @@ def cluster_assignment_nn(robot_list, task_list, L_r, L_t, kappa, num_iterations
         
         """ 2. Merge assignment groupings to create clusters """
         # Merge assignment groupings to create clusters - NOT timed
-        clusters = refine_clusters_nn_merge(assignment_groupings, robot_list, task_list, L_r, L_t,kappa,L,model, epsilon=0.1)
+        clusters = refine_clusters_nn_merge(assignment_groupings, robot_list, task_list, L_r, L_t,kappa,L,model, epsilon)
 
         # Start timing after cluster creation
         start_time = time.time()

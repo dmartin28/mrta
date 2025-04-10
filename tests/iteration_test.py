@@ -25,20 +25,30 @@ from cluster_assignment_rand import cluster_assignment_rand
 from cluster_assignment_nn import cluster_assignment_nn
 import copy
 
+import torch
+from ML.synergy_model import SynergyModel
+
 """HyperParameters"""
-nu = 1000 #number of robots # was 10
-mu = 300 # number of tasks  # was 5
+nu = 10 #number of robots # was 10
+mu = 5 # number of tasks  # was 5
 kappa = 2 # number of capabilities
 L = 3 # maximum team size for a single task
-L_t = 7 # Max number of tasks in a cluster
-L_r = 7 # Max number of robots in a cluster
+L_t = 6 # Max number of tasks in a cluster # must be 6 to work with NN
+L_r = 6 # Max number of robots in a cluster # must be 6 to work with NN
 num_iterations = 100 # number of iterations to run
+epsilon = 0.01 # probability of random merge of clusters
 
 # Define the environment size
 max_x = 100
 min_x = 0
 max_y = 100
 min_y = 0
+
+# Load the saved model
+# Will have size 264 when L_t = 6, L_r = 6, kappa = 2
+model = SynergyModel(264)
+model.load_state_dict(torch.load('best_linear_nn_model.pth'))
+model.eval()
 
 """ Define some specific task types: """
 
@@ -135,7 +145,7 @@ for i in range(mu):
     task_list.append(task)
 
 #total_reward, iteration_assignments, iteration_rewards = cluster_assignment_rand(robot_list, task_list, L_r, L_t, kappa, num_iterations, printout=True)
-total_reward, iteration_assignments, iteration_rewards = cluster_assignment_nn(robot_list, task_list, L_r, L_t, kappa, num_iterations, printout=True)
+total_reward, iteration_assignments, iteration_rewards, iteration_times = cluster_assignment_nn(model, robot_list, task_list, L_r, L_t, kappa, num_iterations, epsilon, printout=True)
 
 # Print final results of all iterations
 print("\n--- Final Results ---")

@@ -125,7 +125,7 @@ for test in range(num_tests):
 
     for cluster_size in cluster_sizes:
             # Perform random iterative assignment
-            total_reward, iteration_assignments, iteration_rewards = cluster_assignment_rand(robot_list, task_list, cluster_size, cluster_size, kappa, num_iterations)
+            total_reward, iteration_assignments, iteration_rewards, iteration_times = cluster_assignment_rand(robot_list, task_list, cluster_size, cluster_size, kappa, num_iterations)
             
             # Store the iteration rewards for this test and cluster size
             results[cluster_size].append(iteration_rewards)

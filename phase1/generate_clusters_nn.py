@@ -49,16 +49,18 @@ def refine_clusters_nn_merge(initial_clusters,robot_list, task_list, L_r, L_t, k
                     # Create NN input vector for each pair of possible merges
                     
                     # Need to build this function to create the input vector
-                    input_vector = create_input_vector(clusters[cluster_index], clusters[candidate], kappa,L,L_r,L_t)
-                    
+                    input_vector = create_input_vector(clusters[cluster_index], clusters[candidate],robot_list,task_list, kappa,L,L_r,L_t)
+                    # print(f"input_vector shape: {input_vector.shape}")
                     # Need to figure out how to load the model
                     # Predicted reward = model(input_vector)
                     with torch.no_grad():
+                        #predicted_reward = model(torch.FloatTensor(input_vector)).item()
                         predicted_reward = model(torch.FloatTensor(input_vector)).item()
                     predicted_rewards.append(predicted_reward)
-                
                 # Create a softmax distribution over the predicted rewards
-                softmax_probs = np.exp(predicted_rewards) / np.sum(np.exp(predicted_rewards))
+                softmax_probs = stable_softmax(predicted_rewards)
+                print(f"Predicted rewards: {[round(reward, 2) for reward in predicted_rewards]}")
+                print(f"Softmax probabilities: {[round(prob, 2) for prob in softmax_probs]}")
                 
                 # Choose a merge pair based on the softmax distribution
                 merge_index = np.random.choice(merge_candidates, p=softmax_probs)
@@ -70,9 +72,10 @@ def refine_clusters_nn_merge(initial_clusters,robot_list, task_list, L_r, L_t, k
             
             # Update incomplete_clusters and complete_clusters
             # I don't think this test is necessary.
-            if len(clusters[cluster_index][0]) == L_r and len(clusters[cluster_index][1]) == L_t:
-                complete_clusters.append(cluster_index)
-                incomplete_clusters.remove(cluster_index)
+            # if len(clusters[cluster_index][0]) == L_r and len(clusters[cluster_index][1]) == L_t:
+            #     complete_clusters.append(cluster_index)
+            #     incomplete_clusters.remove(cluster_index)
+            
             # This is necessary, but should always be true right???
             if merge_index in incomplete_clusters:
                 incomplete_clusters.remove(merge_index)
@@ -116,7 +119,7 @@ def create_input_vector(cluster1, cluster2, robot_list, task_list, kappa,L,L_r,L
     # Pad with zeros if there are fewer than L_r robots
     cluster_2_vector.extend([0] * (L_r - len(robots_2)) * robot_info_size)
 
-    for task in tasks_2:
+    for task_idx in tasks_2:
         task = task_list[task_idx]
         cluster_2_vector.extend([task.x, task.y] + task.reward_matrix.flatten().tolist())
     # Pad with zeros if there are fewer than L_t tasks
@@ -125,4 +128,12 @@ def create_input_vector(cluster1, cluster2, robot_list, task_list, kappa,L,L_r,L
     # Concatenate everything into one vector (This is the input to the NN)
     # Will have size 264 when L_t = 6, L_r = 6, kappa = 2
     nn_input = np.array(cluster_1_vector + cluster_2_vector, dtype=np.float32)
+
+    print(f"nn_input: {nn_input}")
     return nn_input
+
+def stable_softmax(x):
+    x = np.array(x)
+    x_max = np.max(x)
+    exp_x = np.exp(x - x_max)
+    return exp_x / np.sum(exp_x)

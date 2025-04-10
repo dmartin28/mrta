@@ -18,9 +18,10 @@ X_val = val_data.iloc[:, :-1].values
 y_val = val_data.iloc[:, -1].values
 
 # Standardize the features
+print(f"X_val unscaled: {X_val}")
 scaler = StandardScaler()
 X_val = scaler.fit_transform(X_val)
-
+print(f"X_val scaled: {X_val}")
 # Convert to PyTorch tensors
 X_val = torch.FloatTensor(X_val)
 y_val = torch.FloatTensor(y_val).reshape(-1, 1)
@@ -35,7 +36,7 @@ def get_random_samples(X, y, num_samples):
     indices = random.sample(range(len(X)), num_samples)
     return X[indices], y[indices]
 
-# Get 10 random samples
+# Get random samples
 num_samples = 100
 X_samples, y_samples = get_random_samples(X_val, y_val, num_samples)
 
