@@ -16,7 +16,7 @@ from cluster_assignment_rand import cluster_assignment_rand
 
 """HyperParameters"""
 nu = 50 #number of robots # was 10
-mu = 50 # number of tasks  # was 5
+mu = 30 # number of tasks  # was 5
 kappa = 2 # number of capabilities
 L = 3 # maximum team size for a single task
 
@@ -28,8 +28,8 @@ min_y = 0
 
 "Test Parameters"
 cluster_sizes = [1,2,3,4,5,6,7]
-num_tests = 50
-num_iterations = 100 # number of iterations to run
+num_tests = 1
+num_iterations = 200 # number of iterations to run
 
 # Initialize a dictionary to store results for each cluster size
 results = {size: [] for size in cluster_sizes}
@@ -152,7 +152,10 @@ for size, avg_rewards in avg_results.items():
 
 plt.xlabel('Iteration')
 plt.ylabel('Average Reward')
-plt.title(f'Average Reward vs. Iteration for Different Cluster Sizes\n(Averaged over {num_tests} tests with {nu} robots and {mu} tasks)')
+if num_tests > 1:
+    plt.title(f'Average Reward vs. Iteration for Different Cluster Sizes\n(Averaged over {num_tests} tests with {nu} robots and {mu} tasks)')
+else:
+    plt.title(f'Average Reward vs. Iteration for Different Cluster Sizes\n(Tested with {nu} robots and {mu} tasks)')
 plt.legend()
 plt.grid(True)
 plt.savefig('random_cluster_results_plot.png')

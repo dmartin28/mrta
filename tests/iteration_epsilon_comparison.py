@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 import pickle
 from cluster_assignment_nn import cluster_assignment_nn
 """HyperParameters"""
-nu = 40 #number of robots # was 10
-mu = 20 # number of tasks  # was 5
+nu = 30 #number of robots # was 10
+mu = 30 # number of tasks  # was 5
 kappa = 2 # number of capabilities
 L = 3 # maximum team size for a single task
 
@@ -29,9 +29,9 @@ min_y = 0
 
 "Test Parameters"
 cluster_size = 6
-epsilons = [0, 0.1, 0.5, 1.0]
-num_tests = 10
-num_iterations = 50 # number of iterations to run
+epsilons = [0, 0.1, 0.5, 0.9, 1.0]
+num_tests = 20
+num_iterations = 10 # number of iterations to run
 
 # Initialize a dictionary to store results for each cluster size
 results = {size: [] for size in epsilons}
@@ -140,13 +140,13 @@ for test in range(num_tests):
 avg_results = {size: np.mean(np.array(rewards), axis=0) for size, rewards in results.items()}
 
 # Save results and avg_results to files
-with open('random_cluster_results.pkl', 'wb') as f:
+with open('NN_epsilon_results.pkl', 'wb') as f:
     pickle.dump(results, f)
 
-with open('random_cluster_avg_results.pkl', 'wb') as f:
+with open('NN_epsilon_avg_results.pkl', 'wb') as f:
     pickle.dump(avg_results, f)
 
-print("Results saved to 'random_cluster_results.pkl' and 'random_cluster_avg_results.pkl'")
+print("Results saved to 'NN_epsilon_results.pkl' and 'NN_epsilon_results_plot.png'")
 
 # Plot the results
 plt.figure(figsize=(12, 8))

@@ -8,10 +8,16 @@ from shared_classes.task import Task
 import phase1.phase1_utils as utils
 import random
 import torch
+import pickle
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 def refine_clusters_nn_merge(initial_clusters,robot_list, task_list, L_r, L_t, kappa, L, model, epsilon):
     
+    # Load the scaler from the pickle file
+    with open('scaler.pkl', 'rb') as f:
+        scaler = pickle.load(f)
+
     clusters = initial_clusters.copy()
     
     # Create list of clusters that can still increase in size without exceeding L_r or L_t
@@ -49,7 +55,7 @@ def refine_clusters_nn_merge(initial_clusters,robot_list, task_list, L_r, L_t, k
                     # Create NN input vector for each pair of possible merges
                     
                     # Need to build this function to create the input vector
-                    input_vector = create_input_vector(clusters[cluster_index], clusters[candidate],robot_list,task_list, kappa,L,L_r,L_t)
+                    input_vector = create_input_vector(clusters[cluster_index], clusters[candidate],robot_list,task_list, kappa,L,L_r,L_t,scaler)
                     # print(f"input_vector shape: {input_vector.shape}")
                     # Need to figure out how to load the model
                     # Predicted reward = model(input_vector)
@@ -59,8 +65,8 @@ def refine_clusters_nn_merge(initial_clusters,robot_list, task_list, L_r, L_t, k
                     predicted_rewards.append(predicted_reward)
                 # Create a softmax distribution over the predicted rewards
                 softmax_probs = stable_softmax(predicted_rewards)
-                print(f"Predicted rewards: {[round(reward, 2) for reward in predicted_rewards]}")
-                print(f"Softmax probabilities: {[round(prob, 2) for prob in softmax_probs]}")
+                # print(f"Predicted rewards: {[round(reward, 2) for reward in predicted_rewards]}")
+                # print(f"Softmax probabilities: {[round(prob, 2) for prob in softmax_probs]}")
                 
                 # Choose a merge pair based on the softmax distribution
                 merge_index = np.random.choice(merge_candidates, p=softmax_probs)
@@ -86,7 +92,7 @@ def refine_clusters_nn_merge(initial_clusters,robot_list, task_list, L_r, L_t, k
     
     return clusters
 
-def create_input_vector(cluster1, cluster2, robot_list, task_list, kappa,L,L_r,L_t):
+def create_input_vector(cluster1, cluster2, robot_list, task_list, kappa,L,L_r,L_t,scaler):
     
     robots_1 = cluster1[0]
     tasks_1 = cluster1[1]
@@ -129,8 +135,13 @@ def create_input_vector(cluster1, cluster2, robot_list, task_list, kappa,L,L_r,L
     # Will have size 264 when L_t = 6, L_r = 6, kappa = 2
     nn_input = np.array(cluster_1_vector + cluster_2_vector, dtype=np.float32)
 
-    print(f"nn_input: {nn_input}")
-    return nn_input
+    #print(f"nn_input unscaled: {nn_input}")
+    nn_input = nn_input.reshape(1, -1)
+    nn_input = scaler.transform(nn_input)  # Changed from fit_transform to transform
+
+    #print(f"nn_input scaled: {nn_input}")
+
+    return nn_input.flatten()  # Flatten the array before returning
 
 def stable_softmax(x):
     x = np.array(x)

@@ -2,13 +2,13 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+import pickle
 
 from ML.synergy_model import SynergyModel
 
@@ -26,6 +26,12 @@ y_val = val_data.iloc[:, -1].values
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_val = scaler.transform(X_val)
+
+# Save the scaler
+scaler_filename = "scaler.pkl"
+with open(scaler_filename, 'wb') as scaler_file:
+    pickle.dump(scaler, scaler_file)
+print(f"Scaler saved as '{scaler_filename}'")
 
 # Convert to PyTorch tensors
 X_train = torch.FloatTensor(X_train)
