@@ -4,7 +4,7 @@
   "val_samples": 20000,
   "input_features": 264,
   "output_features": 1,
-  "feature_description": "First 264 columns represent robot and task information, last column is the target reward difference",
+  "feature_description": "First 264 columns represent robot and task information (132 values for each cluster), last column is the target reward difference",
   "date_created": "2025-04-08 11:04:00",
   "kappa": 2,
   "L": 3,

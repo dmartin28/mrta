@@ -1,5 +1,9 @@
-"""This script generates a dataset of pairs of robot and task clusters
- that will be used to train a neural network."""
+"""
+This script generates a dataset where each entry includes information about 
+a pair of clusters, along with a target value representing the difference in rewards between 
+the combined optimal assignment and the individual optimal assignments of the clusters.
+This dataset will be used to train a neural network to predict the reward of merging two clusters.
+"""
 
 import sys
 import os
@@ -13,7 +17,8 @@ import random
 from shared_classes.task import Task
 from shared_classes.robot import Robot
 from phase2.IP_assignment import IP_assignment
-import dataset_utils as utils
+import ML.ML_utils as utils
+import tests.test_utils as test_utils
 from sklearn.model_selection import train_test_split
 
 """ Desired dataset size """
@@ -32,80 +37,25 @@ max_y = 100
 min_y = 0
 
 """ Define some specific task types: """
-#Reward matrix dimensions is (L+1)^kappa (0 to L for each capability)
-reward_dim = tuple(L+1 for _ in range(kappa))
-
-#Type 0 can be done by robots with capability 1 
-task_type_0 = np.zeros(reward_dim)
-task_type_0[1,0] = 100
-task_type_0[2,0] = 200
-
-#Type 1 can be done by robots with capability 2 
-task_type_1 = np.zeros(reward_dim)
-task_type_1[0,1] = 100
-task_type_1[0,2] = 150
-task_type_1[0,3] = 200
-
-#Type 2 can be done only collaboratively by cap 1 and 2 
-task_type_2 = np.zeros(reward_dim)
-task_type_2[1,1] = 200
-task_type_2[1,2] = 300
-task_type_2[2,1] = 300
-
-#Type 3 can be done only collaboratively by two of cap 1 
-task_type_3 = np.zeros(reward_dim)
-task_type_3[2,0] = 200
-
-#Type 4 can be done only collaboratively by two of cap 2 
-task_type_4 = np.zeros(reward_dim)
-task_type_4[0,2] = 200
-
-#Type 5 can be done only collaboratively by cap 1 and 2, diminshing returns 
-task_type_5 = np.zeros(reward_dim)
-task_type_5[1,1] = 200
-task_type_5[1,2] = 220
-task_type_5[2,1] = 220
-
-#Type 6 can be done only individually by type 1
-task_type_6 = np.zeros(reward_dim)
-task_type_6[1,0] = 100
-
-#Type 7 can be done only individually by type 2 
-task_type_7 = np.zeros(reward_dim)
-task_type_7[0,1] = 100
-
-#Type 8 can be done by either type, only individually:
-task_type_8 = np.zeros(reward_dim)
-task_type_8[1,0] = 100
-task_type_8[0,1] = 100
-
-#Type 9 can be done by either type but needs 3 robots:
-task_type_9 = np.zeros(reward_dim)
-task_type_9[1,2] = 350
-task_type_9[2,1] = 350
-task_type_9[3,0] = 350
-task_type_9[0,3] = 350
-####################################################
+task_types = test_utils.generate_task_types(L, kappa)
 
 """ Define the two robot types: """
-
 robot_type_1 = [1,0] # Note this is the capability vector
 robot_type_2 = [0,1]
 
-# Initialize list to store all data
+# Initialize list to store all data that will be outputted to a dataset
+# Not the most efficient way to do this, but it works for now
 all_data = []
 
 for sample in range(number_of_samples):
     
     # Generate random number of tasks and robots for each cluster
     (num_tasks_1, num_robots_1), (num_tasks_2, num_robots_2) = utils.generate_cluster_sizes(L_r, L_t)
-    # (num_tasks_1, num_robots_1), (num_tasks_2, num_robots_2) = (0,2), (0,2)
 
     # Generate tasks and robots for cluster 1
     tasks_1 = []
     for i in range(num_tasks_1):
-        task_type = random.choice([task_type_0, task_type_1, task_type_2, task_type_3, task_type_4,
-                                    task_type_5, task_type_6, task_type_7, task_type_8, task_type_9])
+        task_type = random.choice(list(task_types.values()))
         x = random.uniform(min_x, max_x)
         y = random.uniform(min_y, max_y)
         tasks_1.append(Task(i, task_type, x, y))
@@ -120,8 +70,7 @@ for sample in range(number_of_samples):
     # Generate tasks and robots for cluster 2
     tasks_2 = []
     for i in range(num_tasks_2):
-        task_type = random.choice([task_type_0, task_type_1, task_type_2, task_type_3, task_type_4,
-                                    task_type_5, task_type_6, task_type_7, task_type_8, task_type_9])
+        task_type = random.choice(list(task_types.values()))
         x = random.uniform(min_x, max_x)
         y = random.uniform(min_y, max_y)
         tasks_2.append(Task(i + num_tasks_1, task_type, x, y))
@@ -133,11 +82,11 @@ for sample in range(number_of_samples):
         y = random.uniform(min_y, max_y)
         robots_2.append(Robot(i + num_robots_1, robot_type, x, y))
 
-    # Define the size of robot and task information
+    # Define the size of vector needed to store robot and task information
     robot_info_size = 2 + kappa  # x, y, and kappa capability values
     task_info_size = 2 + (L+1)**kappa  # x, y, and flattened reward matrix
 
-    # Concatenate all of cluster 1 info into a vector
+    """ Concatenate all of cluster 1 info into a vector """
     cluster_1_vector = []
     for robot in robots_1:
         cluster_1_vector.extend([robot.x, robot.y] + robot.capabilities.tolist())
@@ -149,7 +98,7 @@ for sample in range(number_of_samples):
     # Pad with zeros if there are fewer than L_t tasks
     cluster_1_vector.extend([0] * (L_t - len(tasks_1)) * task_info_size)
 
-    # Concatenate all of cluster 2 info into a vector
+    """ Concatenate all of cluster 2 info into a vector """
     cluster_2_vector = []
     for robot in robots_2:
         cluster_2_vector.extend([robot.x, robot.y] + robot.capabilities.tolist())
@@ -161,11 +110,11 @@ for sample in range(number_of_samples):
     # Pad with zeros if there are fewer than L_t tasks
     cluster_2_vector.extend([0] * (L_t - len(tasks_2)) * task_info_size)
 
-    # Concatenate everything into one vector (This is the input to the NN)
+    # Concatenate everything into one vector (This is will be the input to the NN)
     # Will have size 264 when L_t = 6, L_r = 6, kappa = 2
     nn_input = np.array(cluster_1_vector + cluster_2_vector, dtype=np.float32)
 
-    # Calculate rewards
+    #Calculate rewards using optimal assignment
     _, reward_1 = IP_assignment(robots_1, tasks_1, L, kappa)
     _, reward_2 = IP_assignment(robots_2, tasks_2, L, kappa)
     _, reward_combined = IP_assignment(robots_1 + robots_2, tasks_1 + tasks_2, L, kappa)
@@ -233,4 +182,3 @@ with open('data/mrta_dataset_metadata.json', 'w') as f:
     json.dump(metadata, f, indent=2)
 
 print("Dataset generation complete. Files saved in 'data' directory.")
-

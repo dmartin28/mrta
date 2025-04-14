@@ -1,4 +1,6 @@
 import random
+import pandas as pd
+import pickle
 
 """ This code returns a pair of cluster sizes """
 def generate_cluster_sizes(L_r, L_t):
@@ -28,3 +30,18 @@ def generate_cluster_sizes(L_r, L_t):
                 break
 
     return (num_tasks_1, num_robots_1), (num_tasks_2, num_robots_2)
+
+def load_and_preprocess_data(data_path, scaler_path):
+    """Load and preprocess the validation data."""
+    val_data = pd.read_csv(data_path)
+    X_val = val_data.iloc[:, :-1].values
+    y_val = val_data.iloc[:, -1].values
+
+    with open(scaler_path, 'rb') as f:
+        scaler = pickle.load(f)
+
+    print(f"X_val unscaled: {X_val}")
+    X_val = scaler.transform(X_val)
+    print(f"X_val scaled: {X_val}")
+
+    return X_val, y_val
