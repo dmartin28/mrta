@@ -1,4 +1,7 @@
 import numpy as np
+import random
+from shared_classes.task import Task
+from shared_classes.robot import Robot
 
 def generate_task_types(L, kappa):
     # Reward matrix dimensions is (L+1)^kappa (0 to L for each capability)
@@ -59,3 +62,53 @@ def generate_task_types(L, kappa):
     task_types[9][0,3] = 350
 
     return task_types
+
+def generate_problem_instance(hypes, max_x, max_y):
+    
+    robot_type_1 = [1,0]
+    robot_type_2 = [0,1]
+    min_x = 100
+    min_y = 100
+    nu = hypes['nu']  # number of robots
+    mu = hypes['mu']  # number of tasks
+    kappa = hypes['kappa']  # number of capabilities
+    L = hypes['L']  # maximum team size
+
+    # Generate random robot and task locations
+    robot_x_locations = np.round(np.random.uniform(min_x, max_x, nu), decimals=1)
+    robot_y_locations = np.round(np.random.uniform(min_y, max_y, nu), decimals=1)
+    task_x_locations = np.round(np.random.uniform(min_x, max_x, mu), decimals=1)
+    task_y_locations = np.round(np.random.uniform(min_y, max_y, mu), decimals=1)
+
+    robot_list = []
+    task_list = []
+
+    # Create robots
+    for i in range(nu):
+        robot_type =random.choice([robot_type_1, robot_type_2])       
+        robot = Robot(i,robot_type, robot_x_locations[i], robot_y_locations[i])
+        robot_list.append(robot)
+
+    # Create tasks
+    task_types = generate_task_types(L, kappa)
+    task_type_keys = list(task_types.keys())
+    for i in range(mu):
+        task_type_key = random.choice(task_type_keys)
+        task_type = task_types[task_type_key]
+        task = Task(i, task_type, task_x_locations[i], task_y_locations[i])
+        task_list.append(task)
+
+    return robot_list, task_list
+
+def print_problem_instance(robot_list, task_list):
+    print(f"Created {len(robot_list)} robots:")
+    for robot in robot_list:
+        print(f"Robot {robot.id}: Position ({robot.x}, {robot.y})")
+        print(f"Capabilities: {robot.capabilities}")
+        print()  # Add an empty line for better readability
+
+    print(f"\nCreated {len(task_list)} tasks:")
+    for task in task_list:
+        print(f"Task {task.id}: Position ({task.x}, {task.y})")
+        print(f"Reward Matrix:\n{task.reward_matrix}")
+        print()  # Add an empty line for better readability

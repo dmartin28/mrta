@@ -1,3 +1,13 @@
+"""
+THIS IS OLD, UNUSED CODE. DO NOT USE THIS FILE.
+
+This code implements the IP assignment for a mrta problem under the assumptions that all
+robots are assigned to tasks. Note that this is not the case in our problem seeting, as it is sometimes
+optimal to have some robots unassigned. This code was used for development and testing purposes only.
+
+Please use the IP_assignment.py file instead.
+"""
+
 import numpy as np
 import math
 from itertools import combinations
