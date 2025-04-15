@@ -8,18 +8,18 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 from phase2.IP_assignment import IP_assignment
-from algorithms.cluster_assignment_rand_new import cluster_assignment_rand_new
+from algorithms.cluster_assignment_rand import cluster_assignment_rand
 import test_utils as tu
 
 """HyperParameters"""
-nu = 10  # number of robots # was 10
-mu = 10  # number of tasks  # was 5
+nu = 9  # number of robots # was 10
+mu = 5  # number of tasks  # was 5
 kappa = 2  # number of capabilities
 L = 3  # maximum team size for a single task
-L_r = 7  # Max number of robots in a cluster
-L_t = 7  # Max number of tasks in a cluster
+L_r = 5  # Max number of robots in a cluster
+L_t = 5  # Max number of tasks in a cluster
 num_iterations = 100  # number of iterations to run
-num_tests = 100  # number of random tests to run
+num_tests = 10  # number of random tests to run
 
 # Define a dictionary of hyperparameters to send to functions
 hypes = {
@@ -48,7 +48,7 @@ for test in range(num_tests):
     robot_list, task_list = tu.generate_problem_instance(hypes, max_x, max_y)
     
     # Run random clustering method
-    total_reward, iteration_assignments, iteration_rewards, iteration_times = cluster_assignment_rand_new(robot_list,task_list,num_iterations,hypes)
+    total_reward, iteration_assignments, iteration_rewards, iteration_times = cluster_assignment_rand(robot_list,task_list,num_iterations,hypes)
     
     # Get the final reward from the random clustering method
     random_final_reward = iteration_rewards[-1]

@@ -3,9 +3,6 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from shared_classes.robot import Robot
-from shared_classes.task import Task
-import phase1.phase1_utils as utils
 import random
 
 """ Refine clusters by merging them randomly until no more merges are possible."""

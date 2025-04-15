@@ -15,15 +15,15 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from phase2.IP_assignment import IP_assignment
-from algorithms.cluster_assignment_nn_new import cluster_assignment_nn_new
+from algorithms.cluster_assignment_nn import cluster_assignment_nn
 import test_utils as tu
 
 import torch
 from ML.synergy_model import SynergyModel
 
 """HyperParameters"""
-nu = 6 #number of robots # was 10
-mu = 3 # number of tasks  # was 5
+nu = 59 #number of robots # was 10
+mu = 25 # number of tasks  # was 5
 kappa = 2 # number of capabilities
 L = 3 # maximum team size for a single task
 L_t = 6 # Max number of tasks in a cluster # must be 6 to work with NN
@@ -56,7 +56,7 @@ model.eval()
 robot_list, task_list = tu.generate_problem_instance(hypes, max_x, max_y)
 
 # Perform cluster assignment using NN as guide
-total_reward, iteration_assignments, iteration_rewards, iteration_times = cluster_assignment_nn_new(model, robot_list, task_list, num_iterations, hypes, printout=True)
+total_reward, iteration_assignments, iteration_rewards, iteration_times = cluster_assignment_nn(model, robot_list, task_list, num_iterations, hypes, printout=True)
 
 # Print final results of all iterations
 print("\n--- Final Results ---")

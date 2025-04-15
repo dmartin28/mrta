@@ -13,21 +13,13 @@ from shared_classes.robot import Robot
 import matplotlib.pyplot as plt
 import pickle
 from algorithms.cluster_assignment_rand import cluster_assignment_rand
+import test_utils as tu
 
 """HyperParameters"""
-nu = 50 #number of robots # was 10
-mu = 30 # number of tasks  # was 5
+nu = 40 #number of robots # was 10
+mu = 22 # number of tasks  # was 5
 kappa = 2 # number of capabilities
 L = 3 # maximum team size for a single task
-
-# Define the environment size (min will always be 0)
-max_x = 100
-max_y = 100
-
-"Test Parameters"
-cluster_sizes = [1,2,3,4,5,6,7]
-num_tests = 1
-num_iterations = 200 # number of iterations to run
 
 # Define a dictionary of hyperparameters to send to functions
 hypes = {
@@ -37,50 +29,32 @@ hypes = {
     'L': L,       # maximum team size
 }
 
+# Define the environment size (min will always be 0)
+max_x = 100
+max_y = 100
+
+"Test Parameters"
+cluster_sizes = [1,2,3,4,5,6,7]
+num_tests = 1
+num_iterations = 100 # number of iterations to run
+
 # Initialize a dictionary to store results for each cluster size
 results = {size: [] for size in cluster_sizes}
 
 for test in range(num_tests):
     print(f"Test: {test+1}")
 
-    """ Define some specific task types: """
-
-    #Reward matrix dimensions is (L+1)^kappa (0 to L for each capability)
-    reward_dim = tuple(L+1 for _ in range(kappa))
-
-
-    """ Define the two robot types: """
-
-    robot_type_1 = [1,0] # Note this is the capability vector
-    robot_type_2 = [0,1]
-
-    # Generate random robot and task locations
-    robot_x_locations = np.round(np.random.uniform(min_x, max_x, nu), decimals=1)
-    robot_y_locations = np.round(np.random.uniform(min_y, max_y, nu), decimals=1)
-    task_x_locations = np.round(np.random.uniform(min_x, max_x, mu), decimals=1)
-    task_y_locations = np.round(np.random.uniform(min_y, max_y, mu), decimals=1)
-
-    robot_list = []
-    task_list = []
-
-    # Create robots
-    robot_types = [robot_type_1, robot_type_2]
-    for i in range(nu):
-        robot_type = random.choice(robot_types)
-        robot = Robot(i, robot_type, robot_x_locations[i], robot_y_locations[i])
-        robot_list.append(robot)
-
-    # Create tasks
-    task_types = [task_type_0, task_type_1, task_type_2, task_type_3, task_type_4,
-                    task_type_5, task_type_6, task_type_7, task_type_8, task_type_9]
-    for i in range(mu):
-        task_type = random.choice(task_types)
-        task = Task(i, task_type, task_x_locations[i], task_y_locations[i])
-        task_list.append(task)
-
+    # Create a random problem instance:
+    robot_list, task_list = tu.generate_problem_instance(hypes, max_x, max_y)
+    
     for cluster_size in cluster_sizes:
+            
+            # Update hyperparameters for the current cluster size
+            hypes['L_r'] = cluster_size
+            hypes['L_t'] = cluster_size
+
             # Perform random iterative assignment
-            total_reward, iteration_assignments, iteration_rewards, iteration_times = cluster_assignment_rand(robot_list, task_list, cluster_size, cluster_size, kappa, num_iterations)
+            total_reward, iteration_assignments, iteration_rewards, iteration_times = cluster_assignment_rand(robot_list, task_list, num_iterations, hypes)
             
             # Store the iteration rewards for this test and cluster size
             results[cluster_size].append(iteration_rewards)
