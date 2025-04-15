@@ -10,7 +10,7 @@ import numpy as np
 import random
 from shared_classes.task import Task
 from shared_classes.robot import Robot
-import phase1.generate_clusters as gc
+import phase1.generate_clusters_rand as gc
 from phase2.IP_assignment import IP_assignment
 from phase1.convert_assignment_to_clusters import convert_assignment_to_clusters
 from cluster_assignment_rand import cluster_assignment_rand

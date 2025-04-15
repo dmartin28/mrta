@@ -39,20 +39,20 @@ robot_list, task_list = utils.generate_problem_instance(hypes, max_x, max_y)
 
 utils.print_problem_instance(robot_list, task_list)
 
-# # Run the algorithms
-# Assignment_old, Reward_old = IP_assignment(robot_list, task_list, hypes['L'], hypes['kappa'], printout=False)
-# Assignment_new, Reward_new = IP_assignment_new(robot_list, task_list, hypes['L'], hypes['kappa'], printout=False)
-# exhaustive_assignment, ex_reward = exhaustive_search(robot_list, task_list, hypes['L'], hypes['kappa'], printout=False)
 
-# Print results
+# Calcuclate and print the results
 print("\nResults Comparison:")
 print("-" * 50)
 print(f"{'Algorithm':<20} {'Reward':<10} {'Assignment'}")
 print("-" * 50)
+
 Assignment_old, Reward_old = IP_assignment(robot_list, task_list, hypes['L'], hypes['kappa'], printout=False)
 print(f"{'IP_assignment':<20} {Reward_old:<10.2f} {Assignment_old}")
+
 Assignment_new, Reward_new = IP_assignment_new(robot_list, task_list, hypes['L'], hypes['kappa'], printout=False)
 print(f"{'IP_assignment_new':<20} {Reward_new:<10.2f} {Assignment_new}")
+
 #exhaustive_assignment, ex_reward = exhaustive_search(robot_list, task_list, hypes['L'], hypes['kappa'], printout=False)
 #print(f"{'Exhaustive Search':<20} {ex_reward:<10.2f} {exhaustive_assignment}")
+
 print("-" * 50)

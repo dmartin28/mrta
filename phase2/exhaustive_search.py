@@ -3,6 +3,11 @@ import math
 from itertools import combinations
 from shared_classes.robot import Robot
 
+""" 
+This code performs an exhaustive search for the optimal assignment of robots to tasks.
+Used to prove IP_assignment and IP_assignment_new correctly find optimal assignments.
+"""
+
 # My Code:
 import phase2.phase2_utils as utils
 

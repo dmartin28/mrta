@@ -7,11 +7,11 @@ import random
 import copy
 from shared_classes.task import Task
 from shared_classes.robot import Robot
-import phase1.generate_clusters as gc
-from phase1.generate_clusters import generate_clusters_move
-from phase1.generate_clusters import generate_clusters_merge
-from phase1.generate_clusters import generate_clusters_movemerge
-from phase1.generate_clusters import nash_eq_clustering
+import phase1.generate_clusters_rand as gc
+from phase1.generate_clusters_rand import generate_clusters_move
+from phase1.generate_clusters_rand import generate_clusters_merge
+from phase1.generate_clusters_rand import generate_clusters_movemerge
+from phase1.generate_clusters_rand import nash_eq_clustering
 from phase2.IP_assignment import IP_assignment
 from phase2.IP_assignment_all_assigned import IP_assignment_all_assigned
 import phase1.phase1_utils as utils

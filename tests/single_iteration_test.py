@@ -8,7 +8,7 @@ import copy
 import matplotlib.pyplot as plt
 from shared_classes.task import Task
 from shared_classes.robot import Robot
-import phase1.generate_clusters as gc
+import phase1.generate_clusters_rand as gc
 # from phase1.generate_clusters import generate_clusters_move
 # from phase1.generate_clusters import generate_clusters_mergemove
 # from phase1.generate_clusters import generate_clusters_movemerge

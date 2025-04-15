@@ -1,9 +1,13 @@
-"""This function generates an assignment by creating clusters of robots and tasks using a neural network as a guide.
+"""This function generates an assignment by creating random clusters of robots and tasks
 Inputs:
-        num_iterations = number of clustering iterations to perform
+        robot_list = list of robot objects
+        task_list = list of task objects
         L_r = maximum number of robots in a cluster
         L_t = maximum number of tasks in a cluster
         kappa = number of different robot capabilities
+        num_iterations = maximum number of clustering iterations to perform
+        time_limit = maximum execution time in seconds (optional)
+        printout = whether to print progress (optional)
         
 The Algorithm is as follows:
 1. Start with all robots and tasks in their own individual assignment grouping
@@ -20,40 +24,31 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 import random
-import phase1.generate_clusters as gc
+import phase1.generate_clusters_rand as gc
 from phase2.IP_assignment import IP_assignment
 from phase1.convert_assignment_to_clusters import convert_assignment_to_clusters
-from phase1.generate_clusters_nn import refine_clusters_nn_merge
-from ML.synergy_model import SynergyModel
 import copy
 import time
-import torch
-import torch.nn as nn
 
 
-def cluster_assignment_nn(model, robot_list, task_list, L_r, L_t, kappa, num_iterations, epsilon=0.1, printout=False):
+def cluster_assignment_rand(robot_list, task_list, L_r, L_t, kappa, num_iterations, time_limit=None, printout=False):
     # Initialize the rewards, assignment vectors, and time tracking
     iteration_rewards = []
     iteration_assignments = []
-    iteration_times = []  # New list to track time per iteration
-
-    # Create empty assignment_groupings list
-    assignment_groupings = []# Load model
+    iteration_times = []  # List to track time per iteration
     
-    # # Load the saved model
-    # # Will have size 264 when L_t = 6, L_r = 6, kappa = 2
-    # model = SynergyModel(264)
-    # model.load_state_dict(torch.load('best_linear_nn_model.pth'))
-    # model.eval()
+    total_time_elapsed = 0  # Track total time elapsed
+    
+    # Create empty assignment_groupings list
+    assignment_groupings = []
 
-    # L is max robots per task
-    L = len(task_list[0].get_reward_matrix())-1
-
-    #print(f"num_iterations: {num_iterations}")
     for iteration in range(num_iterations):
-        # Initialize timing variables
-        total_iteration_time = 0
-        
+        # Check if we've exceeded the time limit
+        if time_limit is not None and total_time_elapsed >= time_limit:
+            if printout:
+                print(f"Time limit of {time_limit} seconds reached after {iteration} iterations.")
+            break
+            
         """ 1. Start with all robots and tasks in their own individual assignment grouping """
         # Note: Assignment groupings have same shape as clusters [List of robots, List of tasks] (2D array)
         if iteration == 0:
@@ -68,7 +63,7 @@ def cluster_assignment_nn(model, robot_list, task_list, L_r, L_t, kappa, num_ite
         
         """ 2. Merge assignment groupings to create clusters """
         # Merge assignment groupings to create clusters - NOT timed
-        clusters = refine_clusters_nn_merge(assignment_groupings, robot_list, task_list, L_r, L_t,kappa,L,model, epsilon)
+        clusters = gc.refine_clusters_random_merge(assignment_groupings, L_r, L_t)
 
         # Start timing after cluster creation
         start_time = time.time()
@@ -78,7 +73,11 @@ def cluster_assignment_nn(model, robot_list, task_list, L_r, L_t, kappa, num_ite
         cluster_assign_rewards = []
         for cluster in clusters:
             
-            # Perform optimal assignment 
+            # Perform optimal assignment
+            
+            # L is max robots per task
+            L = len(task_list[0].get_reward_matrix())-1
+            
             assignment, reward = IP_assignment([robot_list[r] for r in cluster[0]], [task_list[t] for t in cluster[1]], L, kappa)
             
             # Store cluster assignments and rewards
@@ -118,5 +117,14 @@ def cluster_assignment_nn(model, robot_list, task_list, L_r, L_t, kappa, num_ite
         end_time = time.time()
         iteration_time = end_time - start_time
         iteration_times.append(iteration_time)
+        
+        # Update total time elapsed
+        total_time_elapsed += iteration_time
+        
+        # Check if we're about to exceed the time limit
+        if time_limit is not None and total_time_elapsed >= time_limit:
+            if printout:
+                print(f"Time limit of {time_limit} seconds reached after {iteration + 1} iterations.")
+            break
         
     return total_reward, iteration_assignments, iteration_rewards, iteration_times

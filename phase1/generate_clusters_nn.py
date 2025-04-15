@@ -1,4 +1,16 @@
 
+""" This script refines an initial set of clusters by merging them based on a neural network model's predicted rewards.
+    The algorithm is as follows:
+    Loop:
+        1. Randomly choose an incomplete cluster. (Incomplete meaning it is below the max size)
+        2. Find all possible merge pairs for this cluster that do not exceed the max size.
+            2.1 If there are no possible merge pairs, move this cluster to the complete_clusters list. And restart loop
+        3. If there are possible merge pairs:
+            3.1 With prob epsilon choose a random merge pair
+            3.2 With prob 1-epsilon choose merge pair using the softmax distribution of the predicted rewards from the NN
+        4. Merge chosen clusters and repeat loop
+"""
+
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -75,12 +87,6 @@ def refine_clusters_nn_merge(initial_clusters,robot_list, task_list, L_r, L_t, k
             clusters[cluster_index][0] += clusters[merge_index][0]
             clusters[cluster_index][1] += clusters[merge_index][1]
             clusters.pop(merge_index)
-            
-            # Update incomplete_clusters and complete_clusters
-            # I don't think this test is necessary.
-            # if len(clusters[cluster_index][0]) == L_r and len(clusters[cluster_index][1]) == L_t:
-            #     complete_clusters.append(cluster_index)
-            #     incomplete_clusters.remove(cluster_index)
             
             # This is necessary, but should always be true right???
             if merge_index in incomplete_clusters:

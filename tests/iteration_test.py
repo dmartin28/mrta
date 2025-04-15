@@ -18,25 +18,26 @@ import numpy as np
 import random
 from shared_classes.task import Task
 from shared_classes.robot import Robot
-import phase1.generate_clusters as gc
+import phase1.generate_clusters_rand as gc
 from phase2.IP_assignment import IP_assignment
 from phase1.convert_assignment_to_clusters import convert_assignment_to_clusters
-from cluster_assignment_rand import cluster_assignment_rand
-from cluster_assignment_nn import cluster_assignment_nn
+from algorithms.cluster_assignment_rand import cluster_assignment_rand
+from algorithms.cluster_assignment_nn_new import cluster_assignment_nn_new
+from algorithms.cluster_assignment_rand_new import cluster_assignment_rand_new
 import copy
 
 import torch
 from ML.synergy_model import SynergyModel
 
 """HyperParameters"""
-nu = 10 #number of robots # was 10
-mu = 5 # number of tasks  # was 5
+nu = 300 #number of robots # was 10
+mu = 200 # number of tasks  # was 5
 kappa = 2 # number of capabilities
 L = 3 # maximum team size for a single task
 L_t = 6 # Max number of tasks in a cluster # must be 6 to work with NN
 L_r = 6 # Max number of robots in a cluster # must be 6 to work with NN
 num_iterations = 100 # number of iterations to run
-epsilon = 0.01 # probability of random merge of clusters
+epsilon = 0.50 # probability of random merge of clusters
 
 # Define the environment size
 max_x = 100
@@ -144,8 +145,8 @@ for i in range(mu):
     task = Task(i, task_type, task_x_locations[i], task_y_locations[i])
     task_list.append(task)
 
-#total_reward, iteration_assignments, iteration_rewards = cluster_assignment_rand(robot_list, task_list, L_r, L_t, kappa, num_iterations, printout=True)
-total_reward, iteration_assignments, iteration_rewards, iteration_times = cluster_assignment_nn(model, robot_list, task_list, L_r, L_t, kappa, num_iterations, epsilon, printout=True)
+total_reward, iteration_assignments, iteration_rewards, iteration_times = cluster_assignment_rand_new(robot_list, task_list, L_r, L_t, kappa, num_iterations, printout=True)
+#total_reward, iteration_assignments, iteration_rewards, iteration_times = cluster_assignment_nn_new(model, robot_list, task_list, L_r, L_t, kappa, num_iterations, epsilon, printout=True)
 
 # Print final results of all iterations
 print("\n--- Final Results ---")

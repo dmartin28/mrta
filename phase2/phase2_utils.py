@@ -39,6 +39,7 @@ def generate_partitions_all_assigned(n, m, L):
     partition_helper(n, m, L, [], partitions)
     return partitions
 
+"""This function calculates the net reward for a given robot team and task."""
 def calculate_net_reward(robot_team, task):
     if len(robot_team) < 1:
         return 0
@@ -58,78 +59,9 @@ def calculate_net_reward(robot_team, task):
 
         net_reward = capability_value - cost
         # net_reward = capability_value
-        return net_reward
-    
+        return net_reward 
 
-# def single_partition_upper_bound(robot_list, task_list, partition):
-    
-#     n = len(robot_list)
-#     m = len(task_list)
-#     kappa = len(robot_list[0].get_capabilities())
-
-#     max_rewards = np.full((m), float('-inf'))
-#     avg_rewards = np.zeros((max_team_size+1, m))
-
-#     # Calculate max and average reward for each team size for each task
-#     for team_size in range(0, max_team_size+1):
-#         for task_idx in range(0, m):
-            
-#             # Generate combinations
-#             combos = combinations(range(n), team_size)
-
-#             for combo in combos:                        
-                
-#                 robot_team =[]
-#                 for robot_idx in combo:
-#                     robot_team.append(robot_list[robot_idx])
-
-#                 net_reward = calculate_net_reward(robot_team,task_list[task_idx])
-#                 if net_reward > max_rewards[team_size, task_idx]:
-#                     max_rewards[team_size, task_idx] = net_reward
-                    
-#     # Calculate upper bounds for each partition
-#     upper_bounds = np.zeros(len(partitions))
-#     for partition_idx in range(0,len(partitions)):
-#         for task_idx in range(0, m):
-#             upper_bounds[partition_idx] += max_rewards[partitions[partition_idx][task_idx], task_idx]
-
-#     return upper_bounds
-
-# def calculate_upper_bounds(robot_list, task_list, partitions,L):
-    
-#     max_team_size = L
-#     n = len(robot_list)
-#     m = len(task_list)
-#     kappa = len(robot_list[0].get_capabilities())
-
-#     max_rewards = np.full((max_team_size+1, m), float('-inf'))
-#     avg_rewards = np.zeros((max_team_size+1, m))
-
-#     # Calculate max and average reward for each team size for each task
-#     for team_size in range(0, max_team_size+1):
-#         for task_idx in range(0, m):
-            
-#             # Generate combinations
-#             combos = combinations(range(n), team_size)
-
-#             for combo in combos:                        
-                
-#                 robot_team =[]
-#                 for robot_idx in combo:
-#                     robot_team.append(robot_list[robot_idx])
-
-#                 net_reward = calculate_net_reward(robot_team,task_list[task_idx])
-#                 if net_reward > max_rewards[team_size, task_idx]:
-#                     max_rewards[team_size, task_idx] = net_reward
-                    
-#     # Calculate upper bounds for each partition
-#     upper_bounds = np.zeros(len(partitions))
-#     for partition_idx in range(0,len(partitions)):
-#         for task_idx in range(0, m):
-#             upper_bounds[partition_idx] += max_rewards[partitions[partition_idx][task_idx], task_idx]
-
-#     return upper_bounds
-
+"""This function searched for the best assignment within a given partition size"""
 def partition_search(robots,tasks,partition):
     
     # Robot IDs assigned to the first task in tasks
@@ -217,7 +149,8 @@ def partition_search(robots,tasks,partition):
                 best_assignment = [t0_assignment] + sub_assignment
                 
         return best_assignment, max_reward
-            
+
+"""This function is a modified version of partition_search where the first group of robots is not assigned to any task"""            
 def partition_search_dummyTask(robots,tasks,partition):
     
     # This function is a modified version of partition_search that allows for some
@@ -293,93 +226,7 @@ def partition_search_dummyTask(robots,tasks,partition):
                 
         return best_assignment, max_reward
 
-# def partition_search_new(robots, tasks, partition):
-
-#     """
-#     Performs an exhaustive search to find the optimal assignment of robots to tasks based on a given partition.
-
-#     The algorithm works as follows:
-#     1. If there are no tasks, all robots are assigned to the unassigned category (-1).
-#     2. If there is only one task, all robots are assigned to that task.
-#     3. For multiple tasks, it recursively explores all combinations of robot assignments:
-#        - It assigns the specified number of robots to the first task (as per the partition).
-#        - It then recursively solves the subproblem for the remaining robots and tasks.
-#        - It keeps track of the best assignment found so far based on the total reward.
-#     """
-
-#     # Initialize the assignment dictionary
-#     assignment = {-1: []}  # Start with empty list for unassigned robots
-#     for task in tasks:
-#         assignment[task.get_id()] = []  # Empty list for each task
-
-#     # Base case: there are no tasks
-#     if len(tasks) == 0:
-#         assignment[-1] = [robot.get_id() for robot in robots]
-#         return assignment, 0
-
-#     # Base case: there is only one task
-#     if len(tasks) == 1:
-#         task_id = tasks[0].get_id()
-#         assignment[task_id] = [robot.get_id() for robot in robots]
-#         reward = calculate_net_reward(robots, tasks[0])
-#         return assignment, reward
-    
-#     else:
-#         # Recursive case: there are multiple tasks
-#         team_size_0 = partition[0]  # team size for the first task
-#         task_id = tasks[0].get_id()
-
-#         # If no robots assigned to the first task
-#         if team_size_0 == 0:
-#             # Create new robot/task lists and sub_partition
-#             unused_robots = robots.copy()
-#             other_tasks = tasks[1:]
-#             sub_partition = partition[1:]
-
-#             # Recursively call partition_search_new
-#             sub_assignment, add_rewards = partition_search_new(unused_robots, other_tasks, sub_partition)
-#             assignment.update(sub_assignment)
-#             return assignment, add_rewards
-        
-#         # Else, there are some robots assigned to the first task:
-#         n = len(robots)
-#         max_reward = float('-inf')
-#         best_assignment = None
-        
-#         # For all possible combinations of robots for the first task
-#         combos = combinations(range(n), team_size_0)
-#         for combo in combos:
-#             current_assignment = {-1: [], task_id: []}
-#             for task in tasks[1:]:
-#                 current_assignment[task.get_id()] = []
-
-#             unused_robots = robots.copy()
-#             robots_t0 = [] # These are the robots assigned to the first task
-
-#             # Remove robots from unused_robots and add them to robots_t0
-#             for robot_idx in sorted(combo, reverse=True):
-#                 robot = unused_robots.pop(robot_idx)
-#                 robots_t0.append(robot)
-#                 current_assignment[task_id].append(robot.get_id())
-
-#             reward_0 = calculate_net_reward(robots_t0, tasks[0])
-#             sub_assignment, add_rewards = partition_search_new(unused_robots, tasks[1:], partition[1:])
-            
-#             # Merge sub_assignment into current_assignment
-#             for key, value in sub_assignment.items():
-#                 if key in current_assignment: # (Should only hold for -1)
-#                     current_assignment[key].extend(value)
-#                 else:
-#                     current_assignment[key] = value
-
-#             reward = reward_0 + add_rewards
-            
-#             if reward > max_reward:
-#                 max_reward = reward
-#                 best_assignment = current_assignment
-                
-#         return best_assignment, max_reward
-
+""" Modified partition_search that outputs assignment as a dictionary, not a list"""
 def partition_search_new(robots, tasks, partition):
     # Initialize the assignment dictionary
     assignment = {-1: []}  # Start with empty list for unassigned robots
@@ -453,7 +300,8 @@ def partition_search_new(robots, tasks, partition):
                 best_assignment = current_assignment
                 
         return best_assignment, max_reward
-    
+
+""" Modified partition_search_dummyTask that outputs assignment as a dictionary, not a list"""    
 def partition_search_dummyTask_new(robots, tasks, partition):
     """
     This function is a modified version of partition_search that allows for some
