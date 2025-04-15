@@ -12,7 +12,7 @@ from shared_classes.task import Task
 from shared_classes.robot import Robot
 import matplotlib.pyplot as plt
 import pickle
-from cluster_assignment_rand import cluster_assignment_rand
+from algorithms.cluster_assignment_rand import cluster_assignment_rand
 
 """HyperParameters"""
 nu = 50 #number of robots # was 10
@@ -20,16 +20,22 @@ mu = 30 # number of tasks  # was 5
 kappa = 2 # number of capabilities
 L = 3 # maximum team size for a single task
 
-# Define the environment size
+# Define the environment size (min will always be 0)
 max_x = 100
-min_x = 0
 max_y = 100
-min_y = 0
 
 "Test Parameters"
 cluster_sizes = [1,2,3,4,5,6,7]
 num_tests = 1
 num_iterations = 200 # number of iterations to run
+
+# Define a dictionary of hyperparameters to send to functions
+hypes = {
+    'nu': nu,      # number of robots
+    'mu': mu,      # number of tasks
+    'kappa': kappa,   # number of capabilities
+    'L': L,       # maximum team size
+}
 
 # Initialize a dictionary to store results for each cluster size
 results = {size: [] for size in cluster_sizes}
@@ -42,57 +48,6 @@ for test in range(num_tests):
     #Reward matrix dimensions is (L+1)^kappa (0 to L for each capability)
     reward_dim = tuple(L+1 for _ in range(kappa))
 
-    #Type 0 can be done by robots with capability 1 
-    task_type_0 = np.zeros(reward_dim)
-    task_type_0[1,0] = 100
-    task_type_0[2,0] = 200
-
-    #Type 1 can be done by robots with capability 2 
-    task_type_1 = np.zeros(reward_dim)
-    task_type_1[0,1] = 100
-    task_type_1[0,2] = 150
-    task_type_1[0,3] = 200
-
-    #Type 2 can be done only collaboratively by cap 1 and 2 
-    task_type_2 = np.zeros(reward_dim)
-    task_type_2[1,1] = 200
-    task_type_2[1,2] = 250
-    task_type_2[2,1] = 300
-
-    #Type 3 can be done only collaboratively by two of cap 1 
-    task_type_3 = np.zeros(reward_dim)
-    task_type_3[2,0] = 200
-
-    #Type 4 can be done only collaboratively by two of cap 2 
-    task_type_4 = np.zeros(reward_dim)
-    task_type_4[0,2] = 200
-
-    #Type 5 can be done only collaboratively by cap 1 and 2 
-    task_type_5 = np.zeros(reward_dim)
-    task_type_5[1,1] = 200
-    task_type_5[1,2] = 220
-    task_type_5[2,1] = 220
-
-    #Type 6 can be done only individually by type 1
-    task_type_6 = np.zeros(reward_dim)
-    task_type_6[1,0] = 100
-
-    #Type 7 can be done only individually by type 2 
-    task_type_7 = np.zeros(reward_dim)
-    task_type_7[0,1] = 100
-
-    #Type 8 can be done by either type, only individually:
-    task_type_8 = np.zeros(reward_dim)
-    task_type_8[1,0] = 100
-    task_type_8[0,1] = 100
-
-    #Type 9 can be done by either type but needs 3 robots:
-    task_type_9 = np.zeros(reward_dim)
-    task_type_9[1,2] = 350
-    task_type_9[2,1] = 350
-    task_type_9[3,0] = 350
-    task_type_9[0,3] = 350
-    ####################################################
 
     """ Define the two robot types: """
 

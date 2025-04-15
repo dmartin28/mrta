@@ -18,13 +18,21 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from phase2.IP_assignment_new import IP_assignment_new
+from phase2.IP_assignment import IP_assignment
 from phase1.convert_assignment_to_clusters import convert_assignment_to_clusters_new
 from phase1.generate_clusters_nn import refine_clusters_nn_merge
 import copy
 import time
 
-def cluster_assignment_nn_new(model, robot_list, task_list, L_r, L_t, kappa, num_iterations, epsilon=0.1, printout=False):
+def cluster_assignment_nn_new(model, robot_list, task_list, num_iterations, hypes, printout=False):
+    
+    # Unpack hyperparameters
+    L = hypes['L']
+    L_r = hypes['L_r']
+    L_t = hypes['L_t']
+    kappa = hypes['kappa']
+    epsilon = hypes['epsilon']
+    
     # Initialize the rewards, assignment vectors, and time tracking
     iteration_rewards = []
     iteration_assignments = []
@@ -62,7 +70,7 @@ def cluster_assignment_nn_new(model, robot_list, task_list, L_r, L_t, kappa, num
         cluster_assign_rewards = []
         for cluster in clusters:
             # Perform optimal assignment 
-            assignment, reward = IP_assignment_new([robot_list[r] for r in cluster[0]], [task_list[t] for t in cluster[1]], L, kappa)
+            assignment, reward = IP_assignment([robot_list[r] for r in cluster[0]], [task_list[t] for t in cluster[1]], hypes)
             
             # Store cluster assignments and rewards
             cluster_assignments.append(assignment)

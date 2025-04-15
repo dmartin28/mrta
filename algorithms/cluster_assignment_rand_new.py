@@ -23,7 +23,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import phase1.generate_clusters_rand as gc
-from phase2.IP_assignment_new import IP_assignment_new
+from phase2.IP_assignment import IP_assignment_new
 from phase1.convert_assignment_to_clusters import convert_assignment_to_clusters_new
 import copy
 import time

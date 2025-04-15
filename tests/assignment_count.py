@@ -21,8 +21,8 @@ import math
 import phase2.phase2_utils as utils
 
 # Parameters:
-n = 5  # number of robots
-m = 5  # number of tasks
+n = 7  # number of robots
+m = 7  # number of tasks
 L = 3   # max number of robots per task
 
 # Generate all partitions of n into m parts with each part <= L
